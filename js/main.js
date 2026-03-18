@@ -78,16 +78,28 @@ function buildFilters(){
   if(pC&&SUCURSALES.indexOf(pC)!==-1)sC.value=pC;
 }
 
-window.toggleConfig = function(){var b=document.getElementById('config-body'),a=document.getElementById('config-arrow'),o=b.classList.contains('open');b.classList.toggle('open',!o);a.classList.toggle('open',!o);};
-window.triggerUpload = function(){var suc=document.getElementById('sucSelect').value;if(!suc){document.getElementById('sucSelect').style.borderColor='#e05252';setTimeout(function(){document.getElementById('sucSelect').style.borderColor='';},2000);return;}document.getElementById('fi').value='';document.getElementById('fi').click();};
-
+window.toggleConfig = function(){
+  var b=document.getElementById('config-body'),a=document.getElementById('config-arrow'),o=b.classList.contains('open');
+  b.classList.toggle('open',!o);a.classList.toggle('open',!o);
+};
+window.triggerUpload = function(){
+  var suc=document.getElementById('sucSelect').value;
+  if(!suc){
+    document.getElementById('sucSelect').style.borderColor='#e05252';
+    setTimeout(function(){document.getElementById('sucSelect').style.borderColor='';},2000);
+    return;
+  }
+  document.getElementById('fi').value='';document.getElementById('fi').click();
+};
+window.addSucursal = addSucursal;
 window.showPage = function(name,tab){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.ntab').forEach(function(t){t.classList.remove('active');});
   document.getElementById('page-'+name).classList.add('active');if(tab)tab.classList.add('active');
   setCurPage(name);
   var titles={fact:'Facturación Diaria',vend:'Análisis por Vendedor',prod:'Reporte de Producto'};
-  document.getElementById('pageTitle').textContent=titles[name];doRender();
+  document.getElementById('pageTitle').textContent=titles[name]||'Dashboard';
+  doRender();
 };
 
 function saveSucursales(){try{localStorage.setItem('kvn_sucursales',JSON.stringify(SUCURSALES));}catch(e){}}
