@@ -1,6 +1,6 @@
 import { emptyMsg, fm, fn, fd, groupSum, uniqueTickets, DOW_SHORT, MESES_NOMBRE } from '../utils.js';
 import { fComp, fMovp, SUCURSALES, getC } from '../state.js';
-import { buildTable, mkTH, mkTD } from './tables.js';
+import { buildTable, mkTH, mkTD } from '../components/tables.js';
 
 export function renderMensualFact(tkts, movp) {
   var mesF={};

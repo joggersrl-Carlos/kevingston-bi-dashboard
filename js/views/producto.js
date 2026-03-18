@@ -1,6 +1,6 @@
 import { emptyMsg, fn, fm, groupSum, exportCSV, PALETTE } from '../utils.js';
 import { fStock, fMovp, fMovpBySuc, ALL_PROD_ROWS, ALL_PROD_PESOS_ROWS, setAllProdRows, setAllProdPesosRows } from '../state.js';
-import { buildTable, mkTH, mkTD } from './tables.js';
+import { buildTable, mkTH, mkTD } from '../components/tables.js';
 
 export function filterProductos(){
   var q=(document.getElementById('prodSearch').value||'').toLowerCase().trim();

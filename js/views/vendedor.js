@@ -1,6 +1,6 @@
 import { emptyMsg, fm, fn, fd, uniqueTickets } from '../utils.js';
 import { fComp, fMovp } from '../state.js';
-import { buildTable, mkTH, mkTD } from './tables.js';
+import { buildTable, mkTH, mkTD } from '../components/tables.js';
 
 export function renderVend(){
   var comp=fComp(),movp=fMovp();
