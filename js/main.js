@@ -78,38 +78,61 @@ function buildFilters(){
   if(pC&&SUCURSALES.indexOf(pC)!==-1)sC.value=pC;
 }
 
-window.toggleConfig = function(){
-  var b=document.getElementById('config-body'),a=document.getElementById('config-arrow'),o=b.classList.contains('open');
-  b.classList.toggle('open',!o);a.classList.toggle('open',!o);
-};
-window.triggerUpload = function(){
-  var suc=document.getElementById('sucSelect').value;
-  if(!suc){
-    document.getElementById('sucSelect').style.borderColor='#e05252';
-    setTimeout(function(){document.getElementById('sucSelect').style.borderColor='';},2000);
-    return;
-  }
-  document.getElementById('fi').value='';document.getElementById('fi').click();
-};
-window.addSucursal = addSucursal;
-window.showPage = function(name,tab){
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
-  document.querySelectorAll('.ntab').forEach(function(t){t.classList.remove('active');});
-  document.getElementById('page-'+name).classList.add('active');if(tab)tab.classList.add('active');
-  setCurPage(name);
-  var titles={fact:'Facturación Diaria',vend:'Análisis por Vendedor',prod:'Reporte de Producto'};
-  document.getElementById('pageTitle').textContent=titles[name]||'Dashboard';
-  doRender();
-};
-
-function saveSucursales(){try{localStorage.setItem('kvn_sucursales',JSON.stringify(SUCURSALES));}catch(e){}}
-function loadSucursales(){try{var s=localStorage.getItem('kvn_sucursales');if(s){setSucursales(JSON.parse(s));renderSucursales();buildFilters();}}catch(e){}}
-loadSucursales();
-
 document.getElementById('fAnio').onchange=doRender;
 document.getElementById('fMes').onchange=doRender;
 document.getElementById('fCaja').onchange=doRender;
-document.getElementById('fi').onchange=function(ev){ handleFiles(ev, renderLoaded, buildFilters); };
+
+// Exposición global para onclicks en index.html
+window.showPage = function(name, tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (tab) tab.classList.add('active');
+  setCurPage(name);
+  const titles = { fact: 'Facturación Diaria', vend: 'Análisis por Vendedor', prod: 'Reporte de Producto' };
+  document.getElementById('pageTitle').textContent = titles[name] || 'Dashboard';
+  doRender();
+};
+
+window.toggleConfig = function() {
+  const b = document.getElementById('config-body');
+  const a = document.getElementById('config-arrow');
+  const isOpen = b.classList.contains('open');
+  b.classList.toggle('open', !isOpen);
+  a.classList.toggle('open', !isOpen);
+};
+
+window.addSucursal = function() {
+  const inp = document.getElementById('sucNameInput');
+  const name = inp.value.trim();
+  if (!name) return;
+  if (SUCURSALES.some(s => s.toLowerCase() === name.toLowerCase())) {
+    inp.style.borderColor = '#e05252';
+    setTimeout(() => inp.style.borderColor = '', 1500);
+    return;
+  }
+  SUCURSALES.push(name);
+  inp.value = '';
+  renderSucursales();
+  buildFilters();
+  saveSucursales();
+};
+
+window.triggerUpload = function() {
+  const suc = document.getElementById('sucSelect').value;
+  if (!suc) {
+    document.getElementById('sucSelect').style.borderColor = '#e05252';
+    setTimeout(() => document.getElementById('sucSelect').style.borderColor = '', 2000);
+    return;
+  }
+  document.getElementById('fi').value = '';
+  document.getElementById('fi').click();
+};
+
+window.handleFiles = function(ev) {
+  handleFiles(ev, renderLoaded, buildFilters);
+};
+
 
 window.addEventListener('resize', function() {
   if (window.chartDiaria) window.chartDiaria.resize();
