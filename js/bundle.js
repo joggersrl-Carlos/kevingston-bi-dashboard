@@ -271,19 +271,18 @@ async function fetchAll(table, orderCol) {
     if (error) { console.error('[KBI] Error fetching', table, error); break; }
     if (!data || data.length === 0) break;
     allData = allData.concat(data);
-    if (data.length < pageSize) break; // last page
+    if (data.length < pageSize) break;
     from += pageSize;
   }
   return allData;
 }
 
-// Helper: prepare a record for Supabase (remove Date objects, keep only serializable fields)
+// Helper: prepare a record for Supabase (remove Date objects)
 function prepareForSupabase(r, keyFn) {
   var clean = {};
   for (var k in r) {
     if (!r.hasOwnProperty(k)) continue;
     var v = r[k];
-    // Skip Date objects (we store anio/mes/dia separately)
     if (v instanceof Date) continue;
     clean[k] = v;
   }
@@ -311,12 +310,9 @@ async function syncToSupabase() {
   if (!supabase) { console.warn('[KBI] Supabase no disponible.'); return; }
   console.log('[KBI] Sincronizando con Supabase...');
   try {
-    // Sync Sucursales
     if (SUCURSALES.length > 0) {
       await supabase.from('kvn_sucursales').upsert(SUCURSALES.map(s => ({ name: s })));
     }
-    
-    // Sync Loaded Metadata
     if (LOADED.length > 0) {
       await supabase.from('kvn_loaded').upsert(LOADED);
     }
@@ -331,9 +327,10 @@ async function syncToSupabase() {
     if (DB.stock.length > 0) await syncRows('kvn_stock', DB.stock, stockKey);
     if (DB.caja.length > 0) await syncRows('kvn_caja', DB.caja, cajaKey);
 
-    console.log('[KBI] ✅ Sincronización con Supabase completada. Comp:', DB.comp.length, 'Movp:', DB.movp.length, 'Stock:', DB.stock.length, 'Caja:', DB.caja.length);
+    console.log('[KBI] Sincronizacion completada. Comp:', DB.comp.length, 'Movp:', DB.movp.length, 'Stock:', DB.stock.length, 'Caja:', DB.caja.length);
   } catch (err) {
     console.error('[KBI] Error sincronizando con Supabase:', err);
+    throw err;
   }
 }
 
@@ -343,7 +340,7 @@ async function syncRows(table, rows, keyFn) {
     const chunk = rows.slice(i, i + batchSize).map(r => prepareForSupabase(r, keyFn));
     const { error } = await supabase.from(table).upsert(chunk);
     if (error) {
-      console.error('[KBI] Error en upsert de', table, '(batch', i, '-', i + batchSize, '):', error);
+      console.error('[KBI] Error en upsert de', table, '(batch', i, '):', error);
       throw error;
     }
   }
@@ -352,7 +349,6 @@ async function syncRows(table, rows, keyFn) {
 async function loadAllData() {
   let success = false;
 
-  // Try Supabase first
   if (supabase) {
     try {
       console.log('[KBI] Intentando cargar datos de Supabase...');
@@ -360,32 +356,58 @@ async function loadAllData() {
 
       if (sucsData.length > 0) {
         setSucursales(sucsData.map(s => s.name));
-        
-        const loadedData = await fetchAll('kvn_loaded', 'created_at');
-        
-        if (loadedData.length > 0) {
-          console.log('[KBI] Supabase tiene datos. Cargando todo...');
-          const [compData, movpData, stockData, cajaData] = await Promise.all([
-            fetchAll('kvn_comp'),
-            fetchAll('kvn_movp'),
-            fetchAll('kvn_stock'),
-            fetchAll('kvn_caja')
-          ]);
+      }
 
-          clearDB('comp', true); clearDB('movp', true); clearDB('stock', true); clearDB('caja', true);
-          
-          compData.forEach(r => addDBRecord('comp', r.id, r));
-          movpData.forEach(r => addDBRecord('movp', r.id, r));
-          stockData.forEach(r => addDBRecord('stock', r.id, r));
-          cajaData.forEach(r => addDBRecord('caja', r.id, r));
-          
+      // Load all data tables regardless of kvn_loaded status
+      const [loadedData, compData, movpData, stockData, cajaData] = await Promise.all([
+        fetchAll('kvn_loaded', 'created_at'),
+        fetchAll('kvn_comp'),
+        fetchAll('kvn_movp'),
+        fetchAll('kvn_stock'),
+        fetchAll('kvn_caja')
+      ]);
+
+      const hasData = compData.length > 0 || movpData.length > 0 || stockData.length > 0 || cajaData.length > 0;
+
+      if (hasData) {
+        clearDB('comp', true); clearDB('movp', true); clearDB('stock', true); clearDB('caja', true);
+
+        compData.forEach(r => addDBRecord('comp', r.id, r));
+        movpData.forEach(r => addDBRecord('movp', r.id, r));
+        stockData.forEach(r => addDBRecord('stock', r.id, r));
+        cajaData.forEach(r => addDBRecord('caja', r.id, r));
+
+        if (loadedData.length > 0) {
           setLoaded(loadedData);
-          console.log('[KBI] ✅ Datos cargados de Supabase — Comp:', compData.length, 'Movp:', movpData.length, 'Stock:', stockData.length, 'Caja:', cajaData.length);
-          success = true;
+        } else {
+          // kvn_loaded is empty — synthesize chips from data so the UI shows loaded files
+          var synthesized = [];
+          var countBySuc = function(arr) {
+            var m = {};
+            arr.forEach(r => { if (r.sucursal) m[r.sucursal] = (m[r.sucursal] || 0) + 1; });
+            return m;
+          };
+          var addChips = function(arr, type, typeName) {
+            var m = countBySuc(arr);
+            Object.keys(m).forEach(s => {
+              synthesized.push({ id: 'synth-' + type + '-' + s, suc: s, type: type, typeName: typeName, files: 1, n: m[s] });
+            });
+          };
+          addChips(compData, 'comp', 'Comprobantes');
+          addChips(movpData, 'movp', 'Mov. Productos');
+          addChips(stockData, 'stock', 'Stock');
+          addChips(cajaData, 'caja', 'Caja');
+          setLoaded(synthesized);
+          console.log('[KBI] kvn_loaded vacio — chips sintetizados:', synthesized.length);
         }
+
+        console.log('[KBI] Cargados de Supabase — Comp:', compData.length, 'Movp:', movpData.length, 'Stock:', stockData.length, 'Caja:', cajaData.length);
+        success = true;
+      } else if (sucsData.length > 0) {
+        success = true;
       }
     } catch (err) {
-      console.error('[KBI] Error cargando de Supabase, reintentando con IndexedDB:', err);
+      console.error('[KBI] Error cargando de Supabase, usando IndexedDB:', err);
     }
   }
 
@@ -405,22 +427,22 @@ async function loadAllData() {
     ]);
 
     if (results[5]) setSucursales(results[5]);
-    
+
     if (results[4] && results[4].length > 0) {
       clearDB('comp', true); clearDB('movp', true); clearDB('stock', true); clearDB('caja', true);
-      
+
       let cc = results[0] || [];
       cc.forEach(r => addDBRecord('comp', r.sucursal+'|'+r.prefijo+'|'+r.nro+'|'+r.letra+'|'+r.secuencia+'|'+r.tipo_pago, r));
-      
+
       let mm = results[1] || [];
       mm.forEach(r => addDBRecord('movp', r.sucursal+'|'+r.anio+'|'+r.mes+'|'+r.dia+'|'+r.nro_comp+'|'+r.cod_prod+'|'+r.salida, r));
-      
+
       let ss = results[2] || [];
       ss.forEach(r => addDBRecord('stock', r.sucursal+'|'+r.cod_prod+'|'+r.nombre_prod+'|'+r.talle+'|'+r.color, r));
-      
+
       let ca = results[3] || [];
       ca.forEach(r => addDBRecord('caja', r.sucursal+'|'+r.anio+'|'+r.mes+'|'+r.dia, r));
-      
+
       setLoaded(results[4]);
       console.log('[KBI] Datos cargados de IndexedDB (Total LOADED:', LOADED.length, ')');
       return true;
@@ -434,9 +456,9 @@ async function loadAllData() {
 
 function clearLocalData() {
   if (!window.localforage) return;
-  if(confirm('¿Estás seguro de borrar TODOS los datos almacenados localmente de esta computadora?')) {
+  if (confirm('Estas seguro de borrar TODOS los datos almacenados localmente de esta computadora?')) {
     window.localforage.clear().then(function() {
-      alert('Datos borrados exitosamente. La página se recargará.');
+      alert('Datos borrados exitosamente. La pagina se recargara.');
       location.reload();
     });
   }
