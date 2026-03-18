@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Kevingston BI Dashboard</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="toast-container" id="toast-container"></div>
+
+<div class="topbar">
+  <div class="logo-box">K</div>
+  <div class="logo-text">KEVINGSTON</div>
+  <span class="page-title" id="pageTitle">Facturación Diaria</span>
+  <div class="filters">
+    <span class="fl">Año</span>
+    <select id="fAnio"><option value="0">Todos</option></select>
+    <span class="fl">Mes</span>
+    <select id="fMes">
+      <option value="0">Todos</option>
+      <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+      <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+      <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+      <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+    </select>
+    <span class="fl">Sucursal</span>
+    <select id="fCaja"><option value="">Todas</option></select>
+  </div>
+</div>
+
+<div class="nav">
+  <div class="ntab active" onclick="showPage('fact',this)">Facturación Diaria</div>
+  <div class="ntab" onclick="showPage('vend',this)">Análisis por Vendedor</div>
+  <div class="ntab" onclick="showPage('prod',this)">Reporte de Producto</div>
+</div>
+
+<div class="config-bar">
+  <div class="config-header" onclick="toggleConfig()">
+    <div class="config-header-left">⚙️ Paso 1 — Configurar Sucursales
+      <span id="suc-count" style="color:var(--muted);font-weight:400;font-size:10px">0 cargadas</span>
+    </div>
+    <span class="config-arrow" id="config-arrow">▼</span>
+  </div>
+  <div class="config-body open" id="config-body">
+    <div class="suc-add-row">
+      <input type="text" id="sucNameInput" class="suc-text-input"
+        placeholder="Nombre de la sucursal (ej: Castelar)" maxlength="60"
+        onkeydown="if(event.key==='Enter')addSucursal()">
+      <button onclick="addSucursal()"
+        style="background:#c9a96e;color:#111111;border:none;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+        + Agregar
+      </button>
+    </div>
+    <div class="suc-chips" id="sucChips">
+      <span class="suc-empty">Todavía no hay sucursales cargadas</span>
+    </div>
+    <div style="margin-top:15px;text-align:right;">
+      <button onclick="clearLocalData()" style="background:transparent;border:1px solid #e05252;color:#e05252;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;" title="Borra todos los archivos Excel guardados">🗑️ Borrar Datos Locales</button>
+    </div>
+  </div>
+</div>
+
+<div class="upload-bar">
+  <div style="font-size:11px;font-weight:700;color:var(--gold2);margin-bottom:10px">📂 Paso 2 — Cargar Archivos Excel</div>
+  <div class="upload-row">
+    <div class="upload-field">
+      <div class="upload-label">Sucursal</div>
+      <select id="sucSelect" class="upload-select"><option value="">— Seleccioná sucursal —</option></select>
+    </div>
+    <div class="upload-field">
+      <div class="upload-label">Tipo de archivo</div>
+      <select id="tipoSelect" class="upload-select">
+        <option value="comp">🧾 Totales por Comprobante</option>
+        <option value="movp">🔄 Movimientos de Productos</option>
+        <option value="stock">📦 Unidades Vendidas y Stock</option>
+        <option value="caja">💰 Mov. Caja Consolidados</option>
+      </select>
+    </div>
+    <button onclick="triggerUpload()"
+      style="background:#c9a96e;color:#111111;border:none;padding:7px 18px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;height:34px;white-space:nowrap;flex-shrink:0;">
+      📂 Seleccionar archivo(s)
+    </button>
+  </div>
+  <div style="font-size:10px;color:var(--muted)">Podés cargar múltiples archivos del mismo tipo a la vez.</div>
+  <div class="loaded-list" id="loadedList"></div>
+</div>
+<input type="file" id="fi" accept=".xlsx,.xls,.csv" multiple style="display:none" onchange="handleFiles(event)">
+
+<div class="page active" id="page-fact">
+  <div class="kpi-row" id="kpi-fact"></div>
+  <div class="tgrid3">
+    <div class="tcrd"><div class="thdbar"><span class="thdbar-title">Venta por Sucursal</span><button class="csv-btn" onclick="exportCSV('tbl-suc','venta_sucursal')">⬇ CSV</button></div><div class="tscroll" id="tbl-suc"></div></div>
+    <div class="tcrd"><div class="thdbar"><span class="thdbar-title">Facturación Diaria</span><button class="csv-btn" onclick="exportCSV('tbl-diaria','facturacion_diaria')">⬇ CSV</button></div>
+      <div id="chart-diaria" style="width:100%;height:300px;display:none;"></div>
+      <div class="tscroll" id="tbl-diaria"></div>
+    </div>
+    <div class="dow-card"><div class="thdbar">Ranking por Día de Semana</div><div class="dow-body" id="dow-ranking"></div></div>
+  </div>
+  <!-- Ranking Mensual -->
+  <div class="tgrid2">
+    <div class="tcrd"><div class="thdbar">Ranking Mensual — Facturación ($)</div><div class="tscroll" id="tbl-mes-fact"></div></div>
+    <div class="tcrd"><div class="thdbar">Ranking Mensual — Unidades</div><div class="tscroll" id="tbl-mes-uni"></div></div>
+  </div>
+</div>
+
+<div class="page" id="page-vend">
+  <div class="kpi-row" id="kpi-vend"></div>
+  <div class="tcrd-full"><div class="thdbar"><span class="thdbar-title">Venta por Vendedor</span><button class="csv-btn" onclick="exportCSV('tbl-vendedor','venta_vendedor')">⬇ CSV</button></div><div id="tbl-vendedor"></div></div>
+</div>
+
+<div class="page" id="page-prod">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 14px 4px;flex-wrap:wrap;gap:10px">
+    <div class="gender-block" style="padding:0;gap:6px" id="gender-block"></div>
+    <div id="chart-gender" style="width:180px;height:180px;display:none;"></div>
+    <div class="prod-kpi-strip" style="padding:0" id="prod-kpi-strip"></div>
+  </div>
+  <div class="prod-main-grid">
+    <div class="tcrd"><div class="thdbar">Venta por Rubro</div>
+      <div id="chart-rubro" style="width:100%;height:220px;display:none;"></div>
+      <div class="tscroll" id="tbl-rubro"></div>
+    </div>
+    <div class="tcrd"><div class="thdbar">Venta por Sub-Rubro</div><div class="tscroll" id="tbl-subrubro"></div></div>
+    <div class="tcrd">
+      <div class="thdbar">Venta por Producto (Unidades)</div>
+      <div class="prod-search-wrap">
+        <input type="text" id="prodSearch" class="prod-search" placeholder="🔍 Buscar producto o código..." oninput="filterProductos()">
+      </div>
+      <div class="tscroll" id="tbl-producto"></div>
+    </div>
+    <div class="tcrd">
+      <div class="thdbar">Venta por Producto ($)</div>
+      <div class="prod-search-wrap">
+        <input type="text" id="prodSearchPesos" class="prod-search" placeholder="🔍 Buscar producto o código..." oninput="filterProductosPesos()">
+      </div>
+      <div class="tscroll" id="tbl-producto-pesos"></div>
+    </div>
+  </div>
+  <div class="sbar-section">
+    <div class="thdbar">Participación — % Unidades y % Pesos por Rubro</div>
+    <div class="sbar-body"><div class="sbar-legend" id="sbar-legend"></div><div id="sbar-content"></div></div>
+  </div>
+  <div class="annual-wrap"><div class="thdbar">Venta de Unidades Anual</div><div class="annual-scroll" id="tbl-annual"></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+<script type="module" src="js/main.js"></script>
+</body></html>
