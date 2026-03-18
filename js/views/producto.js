@@ -196,7 +196,10 @@ export function renderProd(){
   }
 
   var prodVenta={},prodStock={},prodCod={};
-  movpF.forEach(function(r){if(!prodVenta[r.cod_prod])prodVenta[r.cod_prod]=0;prodVenta[r.cod_prod]+=r.salida;});
+  movpF.forEach(function(r){
+    if(!prodVenta[r.cod_prod])prodVenta[r.cod_prod]=0;
+    prodVenta[r.cod_prod]+=r.salida;
+  });
   stockF.forEach(function(r){
     if(!prodStock[r.cod_prod])prodStock[r.cod_prod]=0;
     prodStock[r.cod_prod]+=r.stock;
@@ -211,7 +214,10 @@ export function renderProd(){
   renderProdTable(pr);
 
   var prodPesos={};
-  movpF.forEach(function(r){if(!prodPesos[r.cod_prod])prodPesos[r.cod_prod]=0;prodPesos[r.cod_prod]+=r.importe;});
+  movpF.forEach(function(r){
+    if(!prodPesos[r.cod_prod])prodPesos[r.cod_prod]=0;
+    prodPesos[r.cod_prod]+=r.importe;
+  });
   let prP = Object.keys(prodPesos).filter(function(k){return k&&k!=='—'&&k!=='';}).map(function(k){
     return{cod:k,nombre:prodCod[k]||k,imp:prodPesos[k]||0};
   }).sort(function(a,b){return b.imp-a.imp;});

@@ -102,7 +102,7 @@ export function renderMensualUni(tkts, movp) {
 export function renderDowRanking(tkts,movp){
   var dd={};for(var d=0;d<7;d++)dd[d]={imp:0,tkt:0,uni:0,dias:{}};
   tkts.forEach(function(r){if(r.dow==null)return;dd[r.dow].imp+=r.importe;dd[r.dow].tkt++;dd[r.dow].dias[r.anio+'-'+r.mes+'-'+r.dia]=true;});
-  movp.forEach(function(r){if(r.dow!=null)dd[r.dow].uni+=r.salida;});
+  movp.forEach(function(r){if(r.dow!=null) dd[r.dow].uni+=r.salida;});
   var list=[];for(var d=0;d<7;d++){if(dd[d].imp>0){var nd=Math.max(1,Object.keys(dd[d].dias).length);list.push({short:DOW_SHORT[d],imp:dd[d].imp,uni:dd[d].uni,pImp:dd[d].imp/nd,pTkt:dd[d].tkt/nd});}}
   list.sort(function(a,b){return b.imp-a.imp;});
   if(!list.length){document.getElementById('dow-ranking').innerHTML='<div style="padding:10px;font-size:11px;color:var(--muted);text-align:center">Sin datos</div>';return;}
@@ -139,7 +139,9 @@ export function renderFact(){
   
   document.getElementById('kpi-fact').innerHTML=mkKpi('Facturación Total',fm(tF))+mkKpi('Unidades',fn(tU))+mkKpi('Tickets',fn(tT))+mkKpi('Cantidad x Ticket',fd(cxt))+mkKpi('Ticket Promedio',fm(tP),'gold')+mkKpi('Costo x Unidad',tU>0?fm(tF/tU):'-','gold');
   
-  var sM=groupSum(tkts,'sucursal',['importe']),sU2=groupSum(movp,'sucursal',['salida']),cSel=getC();
+  var sM=groupSum(tkts,'sucursal',['importe']),sU2={};
+  movp.forEach(function(r){sU2[r.sucursal]=(sU2[r.sucursal]||0)+r.salida;});
+  var cSel=getC();
   var sRows=SUCURSALES.filter(function(s){return sM[s]||sU2[s];}).map(function(s){var imp=sM[s]?sM[s].importe:0,u=sU2[s]?sU2[s].salida:0,t=0;tkts.forEach(function(r){if(r.sucursal===s)t++;});return{k:s,i:imp,u:u,t:t};}).sort(function(a,b){return b.i-a.i;});
   var hlIdx=undefined;if(cSel)for(var i=0;i<sRows.length;i++)if(sRows[i].k===cSel){hlIdx=i;break;}
   
@@ -214,4 +216,55 @@ export function renderFact(){
   renderDowRanking(tkts,movp);
   renderMensualFact(tkts,movp);
   renderMensualUni(tkts,movp);
+
+  // YoY Chart Logic
+  var validComps = getValidComps();
+  var cSel = getC();
+  var yoyMovp = DB.movp.filter(function(r) {
+    if (cSel && r.sucursal !== cSel) return false;
+    if (!validComps) return true;
+    if (!r.nro_comp) return false;
+    var norm = normalizeNro(r.nro_comp);
+    if (!norm) return false;
+    return validComps.has(norm);
+  });
+  var yoyData = {};
+  yoyMovp.forEach(function(r) {
+    if (!r.anio || !r.mes) return;
+    if (!yoyData[r.anio]) yoyData[r.anio] = { 1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0,11:0,12:0 };
+    yoyData[r.anio][r.mes] += r.salida;
+  });
+  var yoyCard = document.getElementById('yoy-card');
+  var años = Object.keys(yoyData).sort();
+  if (años.length > 0 && yoyCard) {
+    yoyCard.style.display = 'block';
+    if (!window.chartYOY) window.chartYOY = echarts.init(document.getElementById('chart-yoy'), 'dark', {renderer: 'canvas'});
+    var series = años.map(function(y, i) {
+      return {
+        name: y,
+        type: 'line',
+        smooth: true,
+        symbolSize: 8,
+        itemStyle: { color: i===0 ? '#94a3b8' : (i===1 ? '#38bdf8' : '#10b981') },
+        lineStyle: { width: i===0 ? 2 : 3, type: i===0 ? 'dashed' : 'solid' },
+        areaStyle: i > 0 ? { color: new window.echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:i===1?'rgba(56,189,248,0.2)':'rgba(16,185,129,0.2)'},{offset:1,color:'transparent'}]) } : null,
+        data: [1,2,3,4,5,6,7,8,9,10,11,12].map(m => yoyData[y][m] || 0)
+      };
+    });
+    window.chartYOY.setOption({
+      backgroundColor: 'transparent',
+      tooltip: { trigger: 'axis', formatter: function(p) {
+         var h = '<div style="font-family:Inter"><b>' + p[0].axisValue + '</b><br/>';
+         p.forEach(s => h += s.marker + ' ' + s.seriesName + ': <b>' + s.value.toLocaleString('es-AR') + ' un.</b><br/>');
+         return h + '</div>';
+      }},
+      legend: { data: años, textStyle: { color: '#f8fafc', fontFamily: 'Inter' }, bottom: 0 },
+      grid: { left: '2%', right: '4%', bottom: '15%', top: '10%', containLabel: true },
+      xAxis: { type: 'category', boundaryGap: false, data: MESES_NOMBRE.map(m=>m.substring(0,3)), axisLabel: { color: '#94a3b8', fontFamily: 'Inter' } },
+      yAxis: { type: 'value', axisLabel: { color: '#94a3b8', fontFamily: 'Inter' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+      series: series
+    }, true);
+  } else if (yoyCard) {
+    yoyCard.style.display = 'none';
+  }
 }

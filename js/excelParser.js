@@ -1,6 +1,5 @@
 import { pDate, pMoney, pNum, ST, getCol, vendCod, vendNombre, showToast } from './utils.js';
 import { DB, SEEN, SUCURSALES, setLoaded, LOADED, addDBRecord } from './state.js';
-import { doRender } from './main.js';
 import { saveAllData } from './storage.js';
 
 export function makeKey(t,r){
@@ -36,7 +35,9 @@ export function doParseMovp(rows,suc){
       desc_prod:getCol(r,'DESCRIPCION_PRODUCTO'),salida:pNum(getCol(r,'CANTIDAD_SALIDA')),
       entrada:pNum(getCol(r,'CANTIDAD_ENTRADA')),importe:pMoney(getCol(r,'IMPORTE_VALORIZACION')),
       vend_raw:vRaw,vend_cod:vendCod(vRaw),vend_nombre:vendNombre(vRaw),
-      rubro:getCol(r,'RUBRO'),subrubro:getCol(r,'SUBRUBRO'),talle:getCol(r,'CODIGO_TALLE'),color:getCol(r,'CODIGO_COLOR')});
+      rubro:getCol(r,'RUBRO'),subrubro:getCol(r,'SUBRUBRO'),talle:getCol(r,'CODIGO_TALLE'),color:getCol(r,'CODIGO_COLOR'),
+      tipo_comp:getCol(r,'TIPO_COMPROBANTE')||getCol(r,'ID_TIPO_COMPROBANTE')||getCol(r,'TIPO'),
+      concepto:getCol(r,'CONCEPTO')||getCol(r,'DESCRIPCION_MOVIMIENTO')});
   });
   return out;
 }
@@ -97,7 +98,7 @@ export function doParseCaja(rows,suc){
   return out;
 }
 
-export function handleFiles(ev, renderLoadedFn, buildFiltersFn){
+export function handleFiles(ev, renderLoadedFn, buildFiltersFn, doRenderFn){
   var files=Array.from(ev.target.files);if(!files.length)return;
   var suc=document.getElementById('sucSelect').value,t=document.getElementById('tipoSelect').value;if(!suc)return;
   var total=files.length,done=0,added=0,failedFiles=[];
@@ -113,7 +114,7 @@ export function handleFiles(ev, renderLoadedFn, buildFiltersFn){
         var keyAlts={
           comp:['IMPORTETOTAL','IMPTOTAL','IMPORTECOMPROBANTE','TOTAL'],
           movp:['CANTIDADSALIDA','CANTSALIDA','CANTSAL'],
-          stock:['UNIDADESVENDIDAS','UNIDVENDIDAS','UNDVENDIDAS','CANTVENDIDA','UNIVENDIDAS'],
+          stock:['UNIDADESVENDIDAS','UNIDVENDIDAS','UNDVENDIDAS','CANTVENDIDA','UNIVENDIDAS','STOCK','STOCKACTUAL','EXISTENCIA','SALDO','CODIGOPRODUCTO','NOMBREPRODUCTO','DESCRIPCIONPRODUCTO','IMPORTEVENTA','IMPORTECOSTO','CODIGOTALLE','CODIGOCOLOR'],
           caja:['VENTAS','VENTASTOTAL','TOTALVENTAS']
         };
         var keys=keyAlts[t],headerIdx=-1;
@@ -145,7 +146,7 @@ export function handleFiles(ev, renderLoadedFn, buildFiltersFn){
           var TN={comp:'Comprobantes',movp:'Mov. Productos',stock:'Stock',caja:'Caja'};
           let newLoaded = [...LOADED, {id:'l'+Date.now(),suc:suc,type:t,typeName:TN[t],files:total,n:added}];
           setLoaded(newLoaded);
-          renderLoadedFn();buildFiltersFn();doRender();
+          renderLoadedFn();buildFiltersFn();doRenderFn();
           saveAllData(); // Guardar en IndexedDB
           document.getElementById('config-body').classList.remove('open');document.getElementById('config-arrow').classList.remove('open');
           showToast('✅ '+added+' registros cargados y guardados','success');
