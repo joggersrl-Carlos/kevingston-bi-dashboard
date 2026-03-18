@@ -107,7 +107,7 @@ export function renderProd(){
   var stockRubroMap={};stockF.forEach(function(r){if(r.cod_prod&&r.nombre_rubro)stockRubroMap[r.cod_prod]=r.nombre_rubro;});
   var rubroVenta={},rubroStock={};
   movpF.forEach(function(r){
-    var rb=stockRubroMap[r.cod_prod]||'—';
+    var rb=stockRubroMap[r.cod_prod] || r.rubro || '—';
     if(!rubroVenta[rb])rubroVenta[rb]=0;
     rubroVenta[rb]+=r.salida;
   });
@@ -151,7 +151,7 @@ export function renderProd(){
   var stockSubRubroMap={};stockF.forEach(function(r){if(r.cod_prod&&r.nombre_subrubro)stockSubRubroMap[r.cod_prod]=r.nombre_subrubro;});
   var subVenta={},subStock={};
   movpF.forEach(function(r){
-    var sb=stockSubRubroMap[r.cod_prod]||'—';
+    var sb=stockSubRubroMap[r.cod_prod] || r.subrubro || '—';
     if(!subVenta[sb])subVenta[sb]=0;
     subVenta[sb]+=r.salida;
   });
@@ -191,7 +191,7 @@ export function renderProd(){
         'tbl-subrubro'
       );
     } else {
-      document.getElementById('tbl-subrubro').innerHTML='<div style="padding:12px;font-size:11px;color:var(--muted)">Columna NOMBRE_RUBRO no encontrada en el archivo de Stock.</div>';
+      document.getElementById('tbl-subrubro').innerHTML='<div style="padding:12px;font-size:11px;color:var(--muted)">No se detectaron Sub-Rubros. Verificá que el archivo de Stock o Movimientos tenga las columnas correspondientes.</div>';
     }
   }
 

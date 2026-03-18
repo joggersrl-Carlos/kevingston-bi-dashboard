@@ -46,22 +46,32 @@ export function doParseStock(rows,suc){
   var colNombreRubro='', colNombreClas2='', colNombreClas1='';
   if(rows.length>0){
     Object.keys(rows[0]).forEach(function(k){
-      var ku=k.toUpperCase().replace(/[\s_]/g,'');
-      if(ku==='NOMBRERUBRO' || ku==='SUBRUBRO')          colNombreRubro=k;
-      if(ku==='NOMBRECLASIFICACION2' || ku==='RUBRO') colNombreClas2=k;
+      var ku=k.toUpperCase().replace(/[^A-Z0-9]/g,'');
+      if(ku==='NOMBRERUBRO' || ku==='SUBRUBRO' || ku==='NOMBRESUBRUBRO' || ku==='SUBFAMILIA') colNombreRubro=k;
+      if(ku==='NOMBRECLASIFICACION2' || ku==='RUBRO' || ku==='FAMILIA' || ku==='CLASIFICACION2') colNombreClas2=k;
       if(ku==='NOMBRECLASIFICACION1' || ku==='GENERO' || ku==='CLASIFICACION1') colNombreClas1=k;
     });
   }
-  var lastSubRubro='', lastRubroPadre='';
+  var lastSubRubro='', lastRubroPadre='', lastClas1='';
   rows.forEach(function(r){
     var np=getCol(r,'NOMBRE_PRODUCTO'),cp=getCol(r,'CODIGO_PRODUCTO');
     if(!np&&!cp)return;
-    var rubro = colNombreClas2 ? ST(r[colNombreClas2]||'') : (getCol(r,'NOMBRE_CLASIFICACION_2') || getCol(r,'RUBRO'));
-    if(rubro && rubro !== lastRubroPadre){ lastSubRubro=''; lastRubroPadre=rubro; }
+
+    var rawRubro = colNombreClas2 ? ST(r[colNombreClas2]||'') : (getCol(r,'NOMBRE_CLASIFICACION_2') || getCol(r,'RUBRO'));
+    if(rawRubro && rawRubro !== lastRubroPadre){ 
+      lastRubroPadre = rawRubro; 
+      lastSubRubro = ''; // Reset subrubro when parent changes
+    }
+    var rubro = lastRubroPadre || '—';
+
     var rawSub = colNombreRubro ? ST(r[colNombreRubro]||'') : (getCol(r,'NOMBRE_RUBRO') || getCol(r,'SUBRUBRO'));
-    if(rawSub) lastSubRubro=rawSub;
-    var subrubro = lastSubRubro || rawSub || '—';
-    var clas1 = colNombreClas1 ? ST(r[colNombreClas1]||'') : getCol(r,'NOMBRE_CLASIFICACION_1');
+    if(rawSub) lastSubRubro = rawSub;
+    var subrubro = lastSubRubro || '—';
+
+    var rawClas1 = colNombreClas1 ? ST(r[colNombreClas1]||'') : getCol(r,'NOMBRE_CLASIFICACION_1');
+    if(rawClas1) lastClas1 = rawClas1;
+    var clas1 = lastClas1 || '—';
+
     out.push({sucursal:suc,
       nombre_rubro:rubro,
       nombre_subrubro:subrubro,
