@@ -134,6 +134,54 @@ window.handleFiles = function(ev) {
 };
 
 
+// Inicialización detallada de eventos para asegurar interactividad en módulos
+function initEvents() {
+  const addBtn = document.querySelector('button[onclick="addSucursal()"]');
+  if (addBtn) {
+    addBtn.removeAttribute('onclick');
+    addBtn.addEventListener('click', window.addSucursal);
+  }
+
+  const configHeader = document.querySelector('.config-header');
+  if (configHeader) {
+    configHeader.removeAttribute('onclick');
+    configHeader.addEventListener('click', window.toggleConfig);
+  }
+
+  const triggerBtn = document.querySelector('button[onclick="triggerUpload()"]');
+  if (triggerBtn) {
+    triggerBtn.removeAttribute('onclick');
+    triggerBtn.addEventListener('click', window.triggerUpload);
+  }
+
+  const clearBtn = document.querySelector('button[onclick="clearLocalData()"]');
+  if (clearBtn) {
+    clearBtn.removeAttribute('onclick');
+    clearBtn.addEventListener('click', window.clearLocalData);
+  }
+
+  const navTabs = document.querySelectorAll('.ntab');
+  navTabs.forEach(tab => {
+    const oc = tab.getAttribute('onclick');
+    if (oc && oc.includes('showPage')) {
+      const match = oc.match(/'([^']+)'/);
+      if (match) {
+        const pageName = match[1];
+        tab.removeAttribute('onclick');
+        tab.addEventListener('click', () => window.showPage(pageName, tab));
+      }
+    }
+  });
+
+  const sucInput = document.getElementById('sucNameInput');
+  if (sucInput) {
+    sucInput.removeAttribute('onkeydown');
+    sucInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') window.addSucursal();
+    });
+  }
+}
+
 window.addEventListener('resize', function() {
   if (window.chartDiaria) window.chartDiaria.resize();
   if (window.chartGender) window.chartGender.resize();
@@ -145,6 +193,9 @@ loadAllData().then(function(hasData) {
     console.log('[KBI] Datos recuperados de sesión anterior existosamente.');
     renderLoaded();
     buildFilters();
+    renderSucursales(); // Asegurar que se rendericen al cargar
   }
+  initEvents(); // Vincular eventos después de que el DOM esté listo
   doRender();
 });
+
