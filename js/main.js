@@ -174,8 +174,22 @@ function renderSucursales(){
 }
 
 window.addSucursal = function(){
-  var inp=document.getElementById('sucNameInput'),name=inp.value.trim();if(!name)return;
-  if(SUCURSALES.some(function(s){return s.toLowerCase()===name.toLowerCase();})){inp.style.borderColor='#e05252';setTimeout(function(){inp.style.borderColor='';},1500);return;}
+  var inp = document.getElementById('sucNameInput');
+  if(!inp) return;
+  var name = inp.value.trim();
+  if(!name) {
+    inp.style.borderColor = '#e05252';
+    if(window.showToast) window.showToast('⚠️ Escribe el nombre de tu sucursal antes de añadirla', 'error', 3000);
+    setTimeout(function(){ inp.style.borderColor=''; }, 2000);
+    inp.focus();
+    return;
+  }
+  if(SUCURSALES.some(function(s){return s.toLowerCase()===name.toLowerCase();})){
+    inp.style.borderColor='#e05252';
+    if(window.showToast) window.showToast('⚠️ Esta sucursal ya existe', 'error', 3000);
+    setTimeout(function(){inp.style.borderColor='';},1500);
+    return;
+  }
   SUCURSALES.push(name);
   inp.value='';
   renderSucursales();
