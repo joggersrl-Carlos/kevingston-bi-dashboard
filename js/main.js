@@ -7,6 +7,105 @@ import { renderResumen } from './views/resumen.js';
 import { handleSort } from './components/tables.js';
 import { exportCSV, showToast } from './utils.js';
 import { loadAllData, saveAllData, clearLocalData, syncToSupabase } from './storage.js';
+import * as stateScope from './state.js';
+
+window._globalState = stateScope;
+
+window.setQuickDate = function(tipo) {
+    if(!window.doRender) return;
+    var td = new Date();
+    var y = td.getFullYear(), m = td.getMonth();
+    var pad = n => n<10 ? '0'+n : n;
+    var fDate = d => d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+    var fi = document.getElementById('fDesde'), ff = document.getElementById('fHasta'); // Corrected IDs based on existing code
+    if (tipo === 'HOY') {
+        fi.value = fDate(td); ff.value = fDate(td);
+    } else if (tipo === '7D') {
+        var d7 = new Date(td); d7.setDate(td.getDate() - 6);
+        fi.value = fDate(d7); ff.value = fDate(td);
+    } else if (tipo === 'MTD') {
+        var d1 = new Date(y, m, 1);
+        fi.value = fDate(d1); ff.value = fDate(td);
+    }
+    document.getElementById('fAnio').value = '0'; // Corrected ID based on existing code
+    document.getElementById('fMes').value = '0'; // Corrected ID based on existing code
+    window.doRender();
+};
+
+window.exportGlobalPDF = function() {
+    var activePage = document.querySelector('.page.active');
+    if(!activePage || !window.html2pdf) return;
+
+    var isDark = !document.body.classList.contains('light-mode');
+    var bColor = isDark ? '#0f172a' : '#f8fafc';
+
+    var opt = {
+      margin:       10,
+      filename:     'KVN_Reporte_' + new Date().toISOString().split('T')[0] + '.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false, backgroundColor: bColor },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+    
+    var btn = document.getElementById('btnExportPDF');
+    var oldTxt = btn.innerHTML;
+    btn.innerHTML = '⏳ Generando...';
+    btn.style.opacity = '0.7';
+    
+    window.html2pdf().set(opt).from(activePage).save().then(function(){
+       btn.innerHTML = oldTxt;
+       btn.style.opacity = '1';
+    }).catch(function(e){
+       console.error(e);
+       btn.innerHTML = oldTxt;
+       btn.style.opacity = '1';
+    });
+};
+
+window.toggleAlerts = function() {
+    var d = document.getElementById('alertDropdown');
+    if(d.style.display === 'none') d.style.display = 'block';
+    else d.style.display = 'none';
+};
+
+window.generateAlerts = function() {
+    var alerts = [];
+    var addA = (msg, type) => {
+        var icon = type==='error'?'🔴':type==='warning'?'🟡':'🔵';
+        alerts.push('<div style="background:var(--bg3); padding:8px; border-radius:6px; border-left:3px solid '+(type==='error'?'var(--red)':'var(--gold)')+'; display:flex; gap:6px; align-items:flex-start; line-height:1.3;"><span>'+icon+'</span><span style="flex:1;">'+msg+'</span></div>');
+    };
+
+    var movp = window._globalState ? window._globalState.fMovp() : [];
+    var stock = window._globalState ? window._globalState.fStock() : [];
+    
+    // Alerta 1: Quiebres de Stock Críticos (Ventas >= 3 y Stock <= 0)
+    var pVenta = {};
+    movp.forEach(r => { pVenta[r.nombre_prod||r.cod_prod] = (pVenta[r.nombre_prod||r.cod_prod]||0) + r.salida; });
+    var pStock = {};
+    stock.forEach(r => { pStock[r.nombre_prod||r.cod_prod] = (pStock[r.nombre_prod||r.cod_prod]||0) + r.stock; });
+
+    var brk = 0;
+    Object.keys(pVenta).forEach(p => {
+        if(pVenta[p] >= 3 && (!pStock[p] || pStock[p] <= 0)) {
+            if(brk < 6) addA(`<b>Quiebre de Stock:</b> "${p}" vendió ${pVenta[p]} un. pero el stock general reporta 0.`, 'error');
+            brk++;
+        }
+    });
+    if (brk > 6) addA(`Y otros ${brk - 6} productos sin stock con alta rotación.`, 'warning');
+
+    var badge = document.getElementById('alertBadge');
+    var list = document.getElementById('alertList');
+    if(!badge || !list) return;
+
+    if(alerts.length > 0) {
+        badge.style.display = 'block';
+        badge.innerText = alerts.length;
+        list.innerHTML = alerts.join('');
+    } else {
+        badge.style.display = 'none';
+        list.innerHTML = '<div style="color:var(--muted); text-align:center; padding:10px 0;">Todo en orden. No hay alertas críticas. 🎉</div>';
+    }
+};
 
 console.log('[KBI] main.js initialized');
 
@@ -238,6 +337,7 @@ loadAllData().then(function(hasData) {
   renderSucursales();
   initEvents();
   doRender();
+  if(window.generateAlerts) window.generateAlerts(); // Added this line
   if (hasData) {
     showToast('✅ Datos sincronizados', 'success', 3000);
   }

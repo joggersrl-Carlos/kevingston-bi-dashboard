@@ -227,6 +227,46 @@ export function renderProd(){
   if(document.getElementById('prodSearchPesos'))document.getElementById('prodSearchPesos').value='';
   renderProdTablePesos(prP);
 
+  var talleM={}, colorM={};
+  stockF.forEach(function(r){
+    if(r.talle) talleM[r.talle] = {s:(talleM[r.talle]?talleM[r.talle].s:0)+r.unidades, u:0};
+    if(r.color) colorM[r.color] = {s:(colorM[r.color]?colorM[r.color].s:0)+r.unidades, u:0};
+  });
+  movpF.forEach(function(r){
+    if(r.talle) { if(!talleM[r.talle]) talleM[r.talle] = {s:0,u:0}; talleM[r.talle].u += r.salida; }
+    if(r.color) { if(!colorM[r.color]) colorM[r.color] = {s:0,u:0}; colorM[r.color].u += r.salida; }
+  });
+
+  var tTalleU=0, tTalleS=0;
+  var lstT = Object.keys(talleM).map(function(k){
+    var o=talleM[k]; tTalleU+=o.u; tTalleS+=o.s;
+    return {k:k, u:o.u, s:o.s};
+  }).sort(function(a,b){var dif=b.u-a.u; return dif!==0?dif:b.s-a.s;}).filter(x=>x.u>0||x.s>0).slice(0, 15);
+  
+  if(lstT.length && document.getElementById('tbl-talles')){
+    document.getElementById('tbl-talles').innerHTML = buildTable(
+      [mkTH('Talle',false,'k'),mkTH('Venta',true,'u'),mkTH('Stock',true,'s')],
+      lstT.map(function(r){return [mkTD(r.k,false,r.k), mkTD(fn(r.u),true,r.u), mkTD(fn(r.s),true,r.s)];}),
+      ['Total', mkTD(fn(tTalleU),true), mkTD(fn(tTalleS),true)],
+      'tbl-talles'
+    );
+  } else if (document.getElementById('tbl-talles')) document.getElementById('tbl-talles').innerHTML='<div class="empty">Columna TALLE vacía</div>';
+
+  var tColU=0, tColS=0;
+  var lstC = Object.keys(colorM).map(function(k){
+    var o=colorM[k]; tColU+=o.u; tColS+=o.s;
+    return {k:k, u:o.u, s:o.s};
+  }).sort(function(a,b){var dif=b.u-a.u; return dif!==0?dif:b.s-a.s;}).filter(x=>x.u>0||x.s>0).slice(0,15);
+
+  if(lstC.length && document.getElementById('tbl-colores')){
+    document.getElementById('tbl-colores').innerHTML = buildTable(
+      [mkTH('Color',false,'k'),mkTH('Venta',true,'u'),mkTH('Stock',true,'s')],
+      lstC.map(function(r){return [mkTD(r.k,false,r.k), mkTD(fn(r.u),true,r.u), mkTD(fn(r.s),true,r.s)];}),
+      ['Total', mkTD(fn(tColU),true), mkTD(fn(tColS),true)],
+      'tbl-colores'
+    );
+  } else if (document.getElementById('tbl-colores')) document.getElementById('tbl-colores').innerHTML='<div class="empty">Columna COLOR vacía</div>';
+
   var top=rubroList.slice(0,10);
   var tV2=tVenta||1;
   var rubroImpVenta={};

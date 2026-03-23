@@ -24,6 +24,10 @@ select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(56,
 .suc-add-row{display:flex;gap:8px;margin-bottom:10px}
 .suc-text-input{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px;flex:1;font-family:inherit}
 .suc-text-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(56,189,248,0.2)}
+.filters select, .filters input { background: var(--bg); color: var(--text); padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 11px; outline: none; transition:border 0.3s; }
+.filters select:focus, .filters input:focus { border-color:var(--blue); }
+.qf-btn { background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 3px 8px; font-size: 10px; border-radius: 12px; cursor: pointer; transition: 0.2s; font-weight:600; }
+.qf-btn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
 .suc-chips{display:flex;gap:8px;flex-wrap:wrap}
 .suc-chip{background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--gold);display:flex;align-items:center;gap:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
 .suc-chip-del{cursor:pointer;color:var(--muted);font-size:14px;font-weight:400}.suc-chip-del:hover{color:var(--red)}
