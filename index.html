@@ -12,6 +12,13 @@
   <div class="logo-box">K</div>
   <div class="logo-text">KEVINGSTON</div>
   <span class="page-title" id="pageTitle">Facturación Diaria</span>
+  <div class="top-actions" style="display:flex; align-items:center; gap:16px; margin-right:20px;">
+    <div class="alert-bell" id="alertBell" style="position:relative; cursor:pointer; font-size:16px;" onclick="window.showPage&&window.showPage('alertas')">
+      🔔
+      <span id="alertBadge" style="position:absolute; top:-4px; right:-6px; background:var(--red); color:#fff; font-size:9px; font-weight:bold; padding:2px 4px; border-radius:10px; display:none;">0</span>
+    </div>
+    <button id="themeToggle" style="background:var(--bg2); border:1px solid var(--border); color:var(--text); width:28px; height:28px; border-radius:50%; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); transition:all .2s;" title="Cambiar Tema" onclick="window.toggleTheme&&window.toggleTheme()">☀️</button>
+  </div>
   <div class="filters">
     <span class="fl">Desde</span>
     <input type="date" id="fDesde" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;">
@@ -34,7 +41,8 @@
 </div>
 
 <div class="nav">
-  <div class="ntab active" id="tab-fact">Facturación Diaria</div>
+  <div class="ntab active" id="tab-resu">Resumen General</div>
+  <div class="ntab" id="tab-fact">Facturación Diaria</div>
   <div class="ntab" id="tab-vend">Análisis por Vendedor</div>
   <div class="ntab" id="tab-prod">Reporte de Producto</div>
 </div>
@@ -92,7 +100,18 @@
 </div>
 <input type="file" id="fi" accept=".xlsx,.xls,.csv" multiple style="display:none" onchange="handleFiles(event)">
 
-<div class="page active" id="page-fact">
+<div class="page active" id="page-resu">
+  <div class="kpi-row" id="kpi-resu"></div>
+  <div class="tgrid2">
+    <div class="tcrd"><div class="thdbar">Top 5 Vendedores del Mes</div><div class="tscroll" id="tbl-resu-vend"></div></div>
+    <div class="tcrd"><div class="thdbar">Top 5 Productos del Mes</div><div class="tscroll" id="tbl-resu-prod"></div></div>
+  </div>
+  <div class="tcrd-full" style="margin-top:14px;"><div class="thdbar">Tendencia de Ventas (Últimos 7 días)</div>
+    <div id="chart-resu-tendencia" style="width:100%;height:300px;display:none;"></div>
+  </div>
+</div>
+
+<div class="page" id="page-fact">
   <div class="kpi-row" id="kpi-fact"></div>
   <div class="tcrd-full" id="yoy-card" style="display:none;padding-bottom:10px;"><div class="thdbar">Evolución de Unidades Ventas Diarias (Año vs Año) ✨</div><div id="chart-yoy" style="width:100%;height:320px;margin-top:10px;"></div></div>
   <div class="tgrid3">

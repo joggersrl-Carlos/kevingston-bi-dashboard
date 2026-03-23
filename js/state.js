@@ -2,7 +2,7 @@ export var DB={comp:[],movp:[],stock:[],caja:[]};
 export var SEEN={comp:{},movp:{},stock:{},caja:{}};
 export var SUCURSALES=[];
 export var LOADED=[];
-export var curPage='fact';
+export var curPage='resu';
 
 export function setSucursales(sucs) { SUCURSALES.splice(0, SUCURSALES.length, ...sucs); }
 export function setLoaded(l) { LOADED.splice(0, LOADED.length, ...l); }

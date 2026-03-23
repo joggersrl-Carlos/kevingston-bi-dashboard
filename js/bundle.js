@@ -94,7 +94,7 @@ var DB={comp:[],movp:[],stock:[],caja:[]};
 var SEEN={comp:{},movp:{},stock:{},caja:{}};
 var SUCURSALES=[];
 var LOADED=[];
-var curPage='fact';
+var curPage='resu';
 
 function setSucursales(sucs) { SUCURSALES.splice(0, SUCURSALES.length, ...sucs); }
 function setLoaded(l) { LOADED.splice(0, LOADED.length, ...l); }
@@ -791,6 +791,8 @@ function renderFact(){
   if(dK.length){
     document.getElementById('chart-diaria').style.display='block';
     if(!window.chartDiaria) window.chartDiaria = window.echarts.init(document.getElementById('chart-diaria'));
+    var tc = document.body.classList.contains('light-mode') ? '#334155' : '#f0ede8';
+    var tcM = document.body.classList.contains('light-mode') ? '#64748b' : '#8a8680';
     var cX=[], cF=[], cU=[];
     dK.forEach(function(k){
       var v=dM[k];
@@ -806,12 +808,12 @@ function renderFact(){
           else h+=s.marker+' Unidades: <b>'+s.value.toLocaleString('es-AR')+'</b><br/>';
         });return h;
       }},
-      legend:{data:['Facturación','Unidades'],textStyle:{color:'#f0ede8'},bottom:0},
+      legend:{data:['Facturación','Unidades'],textStyle:{color:tc},bottom:0},
       grid:{left:'3%',right:'4%',bottom:'15%',top:'12%',containLabel:true},
-      xAxis:[{type:'category',data:cX,axisLabel:{color:'#8a8680'}}],
+      xAxis:[{type:'category',data:cX,axisLabel:{color:tcM}}],
       yAxis:[
-        {type:'value',name:'$',nameTextStyle:{color:'#c9a96e'},axisLabel:{color:'#8a8680',formatter:function(v){return'$ '+(v>=1000?(v/1000).toFixed(0)+'k':v);}},splitLine:{lineStyle:{color:'rgba(255,255,255,0.05)'}}},
-        {type:'value',name:'Unidades',nameTextStyle:{color:'#52c48a'},axisLabel:{color:'#8a8680'},splitLine:{show:false}}
+        {type:'value',name:'$',nameTextStyle:{color:'#c9a96e'},axisLabel:{color:tcM,formatter:function(v){return'$ '+(v>=1000?(v/1000).toFixed(0)+'k':v);}},splitLine:{lineStyle:{color:'rgba(255,255,255,0.05)'}}},
+        {type:'value',name:'Unidades',nameTextStyle:{color:'#52c48a'},axisLabel:{color:tcM},splitLine:{show:false}}
       ],
       series:[
         {name:'Facturación',type:'line',smooth:true,yAxisIndex:0,data:cF,itemStyle:{color:'#c9a96e'},areaStyle:{color:new window.echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(201,169,110,0.5)'},{offset:1,color:'rgba(201,169,110,0.0)'}])}},
@@ -862,7 +864,9 @@ function renderFact(){
   var años = Object.keys(yoyData).sort();
   if (años.length > 0 && yoyCard) {
     yoyCard.style.display = 'block';
-    if (!window.chartYOY) window.chartYOY = echarts.init(document.getElementById('chart-yoy'), 'dark', {renderer: 'canvas'});
+    if (!window.chartYOY) window.chartYOY = echarts.init(document.getElementById('chart-yoy'), document.body.classList.contains('light-mode') ? null : 'dark', {renderer: 'canvas'});
+    var tcY = document.body.classList.contains('light-mode') ? '#334155' : '#f8fafc';
+    var tcMY = document.body.classList.contains('light-mode') ? '#64748b' : '#94a3b8';
     var series = años.map(function(y, i) {
       return {
         name: y,
@@ -882,10 +886,10 @@ function renderFact(){
          p.forEach(s => h += s.marker + ' ' + s.seriesName + ': <b>' + s.value.toLocaleString('es-AR') + ' un.</b><br/>');
          return h + '</div>';
       }},
-      legend: { data: años, textStyle: { color: '#f8fafc', fontFamily: 'Inter' }, bottom: 0 },
+      legend: { data: años, textStyle: { color: tcY, fontFamily: 'Inter' }, bottom: 0 },
       grid: { left: '2%', right: '4%', bottom: '15%', top: '10%', containLabel: true },
-      xAxis: { type: 'category', boundaryGap: false, data: MESES_NOMBRE.map(m=>m.substring(0,3)), axisLabel: { color: '#94a3b8', fontFamily: 'Inter' } },
-      yAxis: { type: 'value', axisLabel: { color: '#94a3b8', fontFamily: 'Inter' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+      xAxis: { type: 'category', boundaryGap: false, data: MESES_NOMBRE.map(m=>m.substring(0,3)), axisLabel: { color: tcMY, fontFamily: 'Inter' } },
+      yAxis: { type: 'value', axisLabel: { color: tcMY, fontFamily: 'Inter' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
       series: series
     }, true);
   } else if (yoyCard) {
@@ -1017,6 +1021,7 @@ function renderProd(){
   if(chartGenderData.length){
     document.getElementById('chart-gender').style.display='block';
     if(!window.chartGender) window.chartGender=window.echarts.init(document.getElementById('chart-gender'));
+    var tcGen = document.body.classList.contains('light-mode') ? '#334155' : '#f0ede8';
     window.chartGender.setOption({
       tooltip:{trigger:'item',formatter:'<b>{b}</b><br/>{c} un. ({d}%)'},
       legend:{show:false},
@@ -1024,7 +1029,7 @@ function renderProd(){
       series:[{
         name:'Género',type:'pie',radius:['50%','75%'],avoidLabelOverlap:false,
         itemStyle:{borderColor:'#2a2a2a',borderWidth:2},
-        label:{show:true,position:'center',formatter:function(){return fn(tGenTotal)+'\nUnidades';},fontSize:14,fontWeight:'bold',color:'#f0ede8'},
+        label:{show:true,position:'center',formatter:function(){return fn(tGenTotal)+'\nUnidades';},fontSize:14,fontWeight:'bold',color:tcGen},
         emphasis:{label:{show:true,fontSize:14,fontWeight:'bold'}},
         labelLine:{show:false},
         data:chartGenderData
@@ -1053,9 +1058,10 @@ function renderProd(){
   if(rubroList.length){
     document.getElementById('chart-rubro').style.display='block';
     if(!window.chartRubro) window.chartRubro=window.echarts.init(document.getElementById('chart-rubro'));
+    var tcRubM = document.body.classList.contains('light-mode') ? '#64748b' : '#8a8680';
     window.chartRubro.setOption({
       tooltip:{trigger:'item',formatter:'<b>{b}</b><br/>Venta: {c} un. ({d}%)'},
-      legend:{type:'scroll',orient:'vertical',right:0,top:'middle',textStyle:{color:'#8a8680',fontSize:10},pageTextStyle:{color:'#8a8680'}},
+      legend:{type:'scroll',orient:'vertical',right:0,top:'middle',textStyle:{color:tcRubM,fontSize:10},pageTextStyle:{color:tcRubM}},
       color:PALETTE,
       series:[{
         name:'Rubro',type:'pie',radius:['40%','70%'],center:['40%','50%'],
@@ -1197,6 +1203,94 @@ function renderProd(){
   );
 }
 
+// === js/views/resumen.js ===
+
+function renderResumen() {
+  var comp = fComp(), movp = fMovp();
+  if(!comp.length && !movp.length) {
+    document.getElementById('kpi-resu').innerHTML = emptyMsg('Configurá las sucursales y cargá los archivos para ver el Resumen Ejecutivo.');
+    document.getElementById('tbl-resu-vend').innerHTML = '';
+    document.getElementById('tbl-resu-prod').innerHTML = '';
+    document.getElementById('chart-resu-tendencia').style.display = 'none';
+    return;
+  }
+  var tkts = uniqueTickets(comp);
+  var tF = 0; tkts.forEach(function(r) { tF += r.importe; });
+  var tT = tkts.length, tU = 0; movp.forEach(function(r) { tU += r.salida; });
+
+  // Top Vendedores
+  var vComp = {}; 
+  tkts.forEach(function(r) { 
+    var cod = r.vend_cod || '—'; 
+    if(!vComp[cod]) vComp[cod] = { imp: 0, nombre: r.vend_nombre || cod }; 
+    vComp[cod].imp += r.importe; 
+  });
+  var vMovp = {}; 
+  movp.forEach(function(r) { 
+    var cod = r.vend_cod || '—'; 
+    if(!vMovp[cod]) vMovp[cod] = 0; 
+    vMovp[cod] += r.salida; 
+  });
+  var vendArr = Object.keys(vComp).map(function(cod){
+     return { nombre: vComp[cod].nombre, imp: vComp[cod].imp, uni: vMovp[cod] || 0 };
+  }).sort(function(a,b) { return b.imp - a.imp; });
+  
+  // Top Productos
+  var prodV = {}; var prodCod = {};
+  movp.forEach(function(r) {
+     if(!prodV[r.cod_prod]) prodV[r.cod_prod] = 0;
+     prodV[r.cod_prod] += r.salida;
+     prodCod[r.cod_prod] = r.nombre_prod;
+  });
+  var prodArr = Object.keys(prodV).filter(function(k){return k&&k!=='—';}).map(function(k){
+     return { cod: k, nombre: prodCod[k] || k, uni: prodV[k] };
+  }).sort(function(a,b){ return b.uni - a.uni; });
+
+  var topVend = vendArr.length ? vendArr[0].nombre : '-';
+  var topProd = prodArr.length ? prodArr[0].nombre : '-';
+
+  var mkKpiL = function(l,v,cls) { return '<div class="kpi"><div class="kpi-label">'+l+'</div><div class="kpi-val '+(cls||'')+'">'+v+'</div></div>'; };
+  document.getElementById('kpi-resu').innerHTML = 
+    mkKpiL('Facturación', fm(tF), 'gold') + 
+    mkKpiL('Unidades', fn(tU)) + 
+    mkKpiL('Tickets', fn(tT)) + 
+    mkKpiL('Mejor Vendedor', topVend.substring(0,15)) + 
+    mkKpiL('Producto Estrella', topProd.substring(0,20));
+
+  document.getElementById('tbl-resu-vend').innerHTML = buildTable(
+    [mkTH('Vendedor'), mkTH('Facturación',true,'i'), mkTH('Unidades',true,'u')],
+    vendArr.slice(0,5).map(function(r) { return [mkTD(r.nombre), mkTD(fm(r.imp),true,r.imp), mkTD(fn(r.uni),true,r.uni)]; }),
+    null, 'tbl-resu-vend'
+  );
+
+  document.getElementById('tbl-resu-prod').innerHTML = buildTable(
+    [mkTH('Producto'), mkTH('Unidades',true,'u')],
+    prodArr.slice(0,5).map(function(r){ return [mkTD(r.nombre), mkTD(fn(r.uni),true,r.uni)]; }),
+    null, 'tbl-resu-prod'
+  );
+
+  // Tendencia 7 días
+  var dM={};
+  tkts.forEach(function(r){ var k=r.anio+'-'+r.mes+'-'+r.dia; if(!dM[k]) dM[k]={dia:r.dia, mes:r.mes, imp:0}; dM[k].imp+=r.importe; });
+  var dK=Object.keys(dM).sort(function(a,b){ var pa=a.split('-'), pb=b.split('-'); return (+pa[0]-+pb[0]) || (+pa[1]-+pb[1]) || (+pa[2]-+pb[2]); }).slice(-7);
+  var charContainer = document.getElementById('chart-resu-tendencia');
+  if(dK.length && charContainer) {
+     charContainer.style.display='block';
+     if(!window.chartResu) window.chartResu = window.echarts.init(charContainer);
+     var tcM = document.body.classList.contains('light-mode') ? '#64748b' : '#8a8680';
+     var grad = new window.echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(56,189,248,0.5)'},{offset:1,color:'rgba(56,189,248,0.01)'}]);
+     window.chartResu.setOption({
+       tooltip: {trigger:'axis'},
+       grid: {left:'3%', right:'4%', bottom:'10%', top:'10%', containLabel:true},
+       xAxis: {type: 'category', data: dK.map(function(k){return dM[k].dia+'/'+dM[k].mes;}), axisLabel:{color:tcM}},
+       yAxis: {type: 'value', axisLabel:{color:tcM, formatter: function(v){return '$ '+(v>=1000?(v/1000).toFixed(0)+'k':v);}}, splitLine:{lineStyle:{color:'rgba(255,255,255,0.05)'}}},
+       series: [{data: dK.map(function(k){return dM[k].imp;}), name:'Facturación', type: 'line', smooth:true, areaStyle: {color:grad}, itemStyle:{color:'#38bdf8'}}]
+     });
+  } else if (charContainer) {
+     charContainer.style.display='none';
+  }
+}
+
 // === js/main.js ===
 
 console.log('[KBI] main.js initialized');
@@ -1204,7 +1298,8 @@ console.log('[KBI] main.js initialized');
 function doRender(){
   if(curPage==='fact')renderFact();
   else if(curPage==='vend')renderVend();
-  else renderProd();
+  else if(curPage==='prod')renderProd();
+  else if(curPage==='resu')renderResumen();
 }
 window.doRender = doRender;
 
@@ -1306,7 +1401,7 @@ window.showPage = function(name, tab) {
   if (pageEl) pageEl.classList.add('active');
   if (tab) tab.classList.add('active');
   setCurPage(name);
-  const titles = { fact: 'Facturación Diaria', vend: 'Análisis por Vendedor', prod: 'Reporte de Producto' };
+  const titles = { fact: 'Facturación Diaria', vend: 'Análisis por Vendedor', prod: 'Reporte de Producto', resu: 'Resumen General' };
   const titleEl = document.getElementById('pageTitle');
   if (titleEl) titleEl.textContent = titles[name] || 'Dashboard';
   doRender();
@@ -1370,6 +1465,9 @@ function initEvents() {
   const navTabProd = document.getElementById('tab-prod');
   if(navTabProd) navTabProd.addEventListener('click', () => window.showPage('prod', navTabProd));
 
+  const navTabResu = document.getElementById('tab-resu');
+  if(navTabResu) navTabResu.addEventListener('click', () => window.showPage('resu', navTabResu));
+
   const sucInput = document.getElementById('sucNameInput');
   if (sucInput) {
     sucInput.removeAttribute('onkeydown');
@@ -1412,6 +1510,8 @@ window.addEventListener('resize', function() {
   if (window.chartDiaria) window.chartDiaria.resize();
   if (window.chartGender) window.chartGender.resize();
   if (window.chartRubro) window.chartRubro.resize();
+  if (window.chartYOY) window.chartYOY.resize();
+  if (window.chartResu) window.chartResu.resize();
 });
 
 showToast('☁️ Sincronizando datos automáticamente...', 'info', 3000);
@@ -1522,6 +1622,30 @@ window.diagnosticoSucursales = function() {
   }
   
   console.log('%c=== FIN DIAGNÓSTICO ===', 'color:#c9a96e;font-weight:bold');
+};
+
+// --- THEME TOGGLE ---
+const THEME_KEY = 'kbi_theme';
+let isLightMode = localStorage.getItem(THEME_KEY) === 'light';
+if (isLightMode) document.body.classList.add('light-mode');
+
+function updateThemeIcon() {
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = isLightMode ? '🌙' : '☀️';
+}
+updateThemeIcon();
+
+window.toggleTheme = function() {
+  document.body.classList.toggle('light-mode');
+  isLightMode = document.body.classList.contains('light-mode');
+  localStorage.setItem(THEME_KEY, isLightMode ? 'light' : 'dark');
+  updateThemeIcon();
+  if (window.chartResu) { window.chartResu.dispose(); window.chartResu = null; }
+  if (window.chartDiaria) { window.chartDiaria.dispose(); window.chartDiaria = null; }
+  if (window.chartRubro) { window.chartRubro.dispose(); window.chartRubro = null; }
+  if (window.chartGender) { window.chartGender.dispose(); window.chartGender = null; }
+  if (window.chartYOY) { window.chartYOY.dispose(); window.chartYOY = null; }
+  if(window.doRender) window.doRender();
 };
 
 

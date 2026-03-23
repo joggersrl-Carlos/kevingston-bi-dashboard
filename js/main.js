@@ -3,6 +3,7 @@ import { handleFiles } from './excelParser.js';
 import { renderFact } from './views/facturacion.js';
 import { renderProd, filterProductos, filterProductosPesos } from './views/producto.js';
 import { renderVend } from './views/vendedor.js';
+import { renderResumen } from './views/resumen.js';
 import { handleSort } from './components/tables.js';
 import { exportCSV, showToast } from './utils.js';
 import { loadAllData, saveAllData, clearLocalData, syncToSupabase } from './storage.js';
@@ -12,7 +13,8 @@ console.log('[KBI] main.js initialized');
 export function doRender(){
   if(curPage==='fact')renderFact();
   else if(curPage==='vend')renderVend();
-  else renderProd();
+  else if(curPage==='prod')renderProd();
+  else if(curPage==='resu')renderResumen();
 }
 window.doRender = doRender;
 
@@ -114,7 +116,7 @@ window.showPage = function(name, tab) {
   if (pageEl) pageEl.classList.add('active');
   if (tab) tab.classList.add('active');
   setCurPage(name);
-  const titles = { fact: 'Facturación Diaria', vend: 'Análisis por Vendedor', prod: 'Reporte de Producto' };
+  const titles = { fact: 'Facturación Diaria', vend: 'Análisis por Vendedor', prod: 'Reporte de Producto', resu: 'Resumen General' };
   const titleEl = document.getElementById('pageTitle');
   if (titleEl) titleEl.textContent = titles[name] || 'Dashboard';
   doRender();
@@ -178,6 +180,9 @@ function initEvents() {
   const navTabProd = document.getElementById('tab-prod');
   if(navTabProd) navTabProd.addEventListener('click', () => window.showPage('prod', navTabProd));
 
+  const navTabResu = document.getElementById('tab-resu');
+  if(navTabResu) navTabResu.addEventListener('click', () => window.showPage('resu', navTabResu));
+
   const sucInput = document.getElementById('sucNameInput');
   if (sucInput) {
     sucInput.removeAttribute('onkeydown');
@@ -220,6 +225,8 @@ window.addEventListener('resize', function() {
   if (window.chartDiaria) window.chartDiaria.resize();
   if (window.chartGender) window.chartGender.resize();
   if (window.chartRubro) window.chartRubro.resize();
+  if (window.chartYOY) window.chartYOY.resize();
+  if (window.chartResu) window.chartResu.resize();
 });
 
 showToast('☁️ Sincronizando datos automáticamente...', 'info', 3000);
@@ -330,5 +337,29 @@ window.diagnosticoSucursales = function() {
   }
   
   console.log('%c=== FIN DIAGNÓSTICO ===', 'color:#c9a96e;font-weight:bold');
+};
+
+// --- THEME TOGGLE ---
+const THEME_KEY = 'kbi_theme';
+let isLightMode = localStorage.getItem(THEME_KEY) === 'light';
+if (isLightMode) document.body.classList.add('light-mode');
+
+function updateThemeIcon() {
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = isLightMode ? '🌙' : '☀️';
+}
+updateThemeIcon();
+
+window.toggleTheme = function() {
+  document.body.classList.toggle('light-mode');
+  isLightMode = document.body.classList.contains('light-mode');
+  localStorage.setItem(THEME_KEY, isLightMode ? 'light' : 'dark');
+  updateThemeIcon();
+  if (window.chartResu) { window.chartResu.dispose(); window.chartResu = null; }
+  if (window.chartDiaria) { window.chartDiaria.dispose(); window.chartDiaria = null; }
+  if (window.chartRubro) { window.chartRubro.dispose(); window.chartRubro = null; }
+  if (window.chartGender) { window.chartGender.dispose(); window.chartGender = null; }
+  if (window.chartYOY) { window.chartYOY.dispose(); window.chartYOY = null; }
+  if(window.doRender) window.doRender();
 };
 

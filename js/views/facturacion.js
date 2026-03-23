@@ -167,6 +167,8 @@ export function renderFact(){
   if(dK.length){
     document.getElementById('chart-diaria').style.display='block';
     if(!window.chartDiaria) window.chartDiaria = window.echarts.init(document.getElementById('chart-diaria'));
+    var tc = document.body.classList.contains('light-mode') ? '#334155' : '#f0ede8';
+    var tcM = document.body.classList.contains('light-mode') ? '#64748b' : '#8a8680';
     var cX=[], cF=[], cU=[];
     dK.forEach(function(k){
       var v=dM[k];
@@ -182,12 +184,12 @@ export function renderFact(){
           else h+=s.marker+' Unidades: <b>'+s.value.toLocaleString('es-AR')+'</b><br/>';
         });return h;
       }},
-      legend:{data:['Facturación','Unidades'],textStyle:{color:'#f0ede8'},bottom:0},
+      legend:{data:['Facturación','Unidades'],textStyle:{color:tc},bottom:0},
       grid:{left:'3%',right:'4%',bottom:'15%',top:'12%',containLabel:true},
-      xAxis:[{type:'category',data:cX,axisLabel:{color:'#8a8680'}}],
+      xAxis:[{type:'category',data:cX,axisLabel:{color:tcM}}],
       yAxis:[
-        {type:'value',name:'$',nameTextStyle:{color:'#c9a96e'},axisLabel:{color:'#8a8680',formatter:function(v){return'$ '+(v>=1000?(v/1000).toFixed(0)+'k':v);}},splitLine:{lineStyle:{color:'rgba(255,255,255,0.05)'}}},
-        {type:'value',name:'Unidades',nameTextStyle:{color:'#52c48a'},axisLabel:{color:'#8a8680'},splitLine:{show:false}}
+        {type:'value',name:'$',nameTextStyle:{color:'#c9a96e'},axisLabel:{color:tcM,formatter:function(v){return'$ '+(v>=1000?(v/1000).toFixed(0)+'k':v);}},splitLine:{lineStyle:{color:'rgba(255,255,255,0.05)'}}},
+        {type:'value',name:'Unidades',nameTextStyle:{color:'#52c48a'},axisLabel:{color:tcM},splitLine:{show:false}}
       ],
       series:[
         {name:'Facturación',type:'line',smooth:true,yAxisIndex:0,data:cF,itemStyle:{color:'#c9a96e'},areaStyle:{color:new window.echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(201,169,110,0.5)'},{offset:1,color:'rgba(201,169,110,0.0)'}])}},
@@ -238,7 +240,9 @@ export function renderFact(){
   var años = Object.keys(yoyData).sort();
   if (años.length > 0 && yoyCard) {
     yoyCard.style.display = 'block';
-    if (!window.chartYOY) window.chartYOY = echarts.init(document.getElementById('chart-yoy'), 'dark', {renderer: 'canvas'});
+    if (!window.chartYOY) window.chartYOY = echarts.init(document.getElementById('chart-yoy'), document.body.classList.contains('light-mode') ? null : 'dark', {renderer: 'canvas'});
+    var tcY = document.body.classList.contains('light-mode') ? '#334155' : '#f8fafc';
+    var tcMY = document.body.classList.contains('light-mode') ? '#64748b' : '#94a3b8';
     var series = años.map(function(y, i) {
       return {
         name: y,
@@ -258,10 +262,10 @@ export function renderFact(){
          p.forEach(s => h += s.marker + ' ' + s.seriesName + ': <b>' + s.value.toLocaleString('es-AR') + ' un.</b><br/>');
          return h + '</div>';
       }},
-      legend: { data: años, textStyle: { color: '#f8fafc', fontFamily: 'Inter' }, bottom: 0 },
+      legend: { data: años, textStyle: { color: tcY, fontFamily: 'Inter' }, bottom: 0 },
       grid: { left: '2%', right: '4%', bottom: '15%', top: '10%', containLabel: true },
-      xAxis: { type: 'category', boundaryGap: false, data: MESES_NOMBRE.map(m=>m.substring(0,3)), axisLabel: { color: '#94a3b8', fontFamily: 'Inter' } },
-      yAxis: { type: 'value', axisLabel: { color: '#94a3b8', fontFamily: 'Inter' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+      xAxis: { type: 'category', boundaryGap: false, data: MESES_NOMBRE.map(m=>m.substring(0,3)), axisLabel: { color: tcMY, fontFamily: 'Inter' } },
+      yAxis: { type: 'value', axisLabel: { color: tcMY, fontFamily: 'Inter' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
       series: series
     }, true);
   } else if (yoyCard) {

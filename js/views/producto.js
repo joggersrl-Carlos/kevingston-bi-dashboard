@@ -86,6 +86,7 @@ export function renderProd(){
   if(chartGenderData.length){
     document.getElementById('chart-gender').style.display='block';
     if(!window.chartGender) window.chartGender=window.echarts.init(document.getElementById('chart-gender'));
+    var tcGen = document.body.classList.contains('light-mode') ? '#334155' : '#f0ede8';
     window.chartGender.setOption({
       tooltip:{trigger:'item',formatter:'<b>{b}</b><br/>{c} un. ({d}%)'},
       legend:{show:false},
@@ -93,7 +94,7 @@ export function renderProd(){
       series:[{
         name:'Género',type:'pie',radius:['50%','75%'],avoidLabelOverlap:false,
         itemStyle:{borderColor:'#2a2a2a',borderWidth:2},
-        label:{show:true,position:'center',formatter:function(){return fn(tGenTotal)+'\nUnidades';},fontSize:14,fontWeight:'bold',color:'#f0ede8'},
+        label:{show:true,position:'center',formatter:function(){return fn(tGenTotal)+'\nUnidades';},fontSize:14,fontWeight:'bold',color:tcGen},
         emphasis:{label:{show:true,fontSize:14,fontWeight:'bold'}},
         labelLine:{show:false},
         data:chartGenderData
@@ -122,9 +123,10 @@ export function renderProd(){
   if(rubroList.length){
     document.getElementById('chart-rubro').style.display='block';
     if(!window.chartRubro) window.chartRubro=window.echarts.init(document.getElementById('chart-rubro'));
+    var tcRubM = document.body.classList.contains('light-mode') ? '#64748b' : '#8a8680';
     window.chartRubro.setOption({
       tooltip:{trigger:'item',formatter:'<b>{b}</b><br/>Venta: {c} un. ({d}%)'},
-      legend:{type:'scroll',orient:'vertical',right:0,top:'middle',textStyle:{color:'#8a8680',fontSize:10},pageTextStyle:{color:'#8a8680'}},
+      legend:{type:'scroll',orient:'vertical',right:0,top:'middle',textStyle:{color:tcRubM,fontSize:10},pageTextStyle:{color:tcRubM}},
       color:PALETTE,
       series:[{
         name:'Rubro',type:'pie',radius:['40%','70%'],center:['40%','50%'],
