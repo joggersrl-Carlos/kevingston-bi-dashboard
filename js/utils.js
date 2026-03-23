@@ -19,7 +19,14 @@ export function pDate(v){
   if(m)return new Date(parseInt(m[1]),parseInt(m[2])-1,parseInt(m[3]));
   var d2=new Date(s);return isNaN(d2.getTime())?null:d2;
 }
-export function ST(v){return String(v||'').trim();}
+export function ST(v){
+  if(!v) return '';
+  var s = String(v).trim();
+  if(s.indexOf('BAĐO')!==-1 || s.indexOf('BAÃ‘O')!==-1) {
+    s = s.replace(/BAĐO/g, 'BAÑO').replace(/BAÃ‘O/g, 'BAÑO');
+  }
+  return s;
+}
 export function gel(id){return document.getElementById(id);}
 export function fm(n){return '$\u00a0'+Math.round(n).toLocaleString('es-AR');}
 export function fn(n){return Math.round(n).toLocaleString('es-AR');}
