@@ -13,6 +13,9 @@
   <div class="logo-text">KEVINGSTON</div>
   <span class="page-title" id="pageTitle">Facturación Diaria</span>
   <div class="top-actions" style="display:flex; align-items:center; gap:16px; margin-right:20px;">
+    <div id="cloudStatus" title="Verificando Nube..." style="position:relative; font-size:18px; cursor:help;">☁️
+      <div id="cloudDot" style="position:absolute; bottom:0; right:-2px; width:8px; height:8px; border-radius:50%; background:#e8c98a; border:2px solid var(--card); transition:background 0.3s; z-index:2;"></div>
+    </div>
     <div class="alert-bell" id="alertBell" style="position:relative; cursor:pointer; font-size:16px;" onclick="window.showPage&&window.showPage('alertas')">
       🔔
       <span id="alertBadge" style="position:absolute; top:-4px; right:-6px; background:var(--red); color:#fff; font-size:9px; font-weight:bold; padding:2px 4px; border-radius:10px; display:none;">0</span>

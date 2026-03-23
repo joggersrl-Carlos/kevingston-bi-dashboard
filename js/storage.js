@@ -33,6 +33,22 @@ function prepareForSupabase(r, keyFn) {
   return clean;
 }
 
+export function updateCloudUI(status){
+  var dot = document.getElementById('cloudDot');
+  var box = document.getElementById('cloudStatus');
+  if(!dot || !box) return;
+  if(status === 'syncing') {
+    dot.style.background = '#e8c98a'; // Amarillo
+    box.title = 'Sincronizando con Supabase...';
+  } else if(status === 'ok') {
+    dot.style.background = '#52c48a'; // Verde
+    box.title = 'Sincronizado con Supabase';
+  } else if(status === 'error') {
+    dot.style.background = '#e05252'; // Rojo
+    box.title = 'Error de conexión a Supabase';
+  }
+}
+
 export async function saveAllData() {
   // 1. Save to Local Cache (IndexedDB)
   if (window.localforage) {
@@ -50,30 +66,19 @@ export async function saveAllData() {
 }
 
 export async function syncToSupabase() {
-  if (!supabase) { console.warn('[KBI] Supabase no disponible.'); return; }
-  console.log('[KBI] Sincronizando con Supabase...');
+  if (!LOADED.length) return;
+  if (!window.supabaseClient) return;
+  updateCloudUI('syncing');
   try {
-    if (SUCURSALES.length > 0) {
-      await supabase.from('kvn_sucursales').upsert(SUCURSALES.map(s => ({ name: s })));
-    }
-    if (LOADED.length > 0) {
-      await supabase.from('kvn_loaded').upsert(LOADED);
-    }
-
-    var compKey = r => r.sucursal+'|'+r.prefijo+'|'+r.nro+'|'+r.letra+'|'+r.secuencia+'|'+r.tipo_pago;
-    var movpKey = r => r.sucursal+'|'+r.anio+'|'+r.mes+'|'+r.dia+'|'+r.nro_comp+'|'+r.cod_prod+'|'+r.salida;
-    var stockKey = r => r.sucursal+'|'+r.cod_prod+'|'+r.nombre_prod+'|'+r.talle+'|'+r.color;
-    var cajaKey = r => r.sucursal+'|'+r.anio+'|'+r.mes+'|'+r.dia;
-
-    if (DB.comp.length > 0) await syncRows('kvn_comp', DB.comp, compKey);
-    if (DB.movp.length > 0) await syncRows('kvn_movp', DB.movp, movpKey);
-    if (DB.stock.length > 0) await syncRows('kvn_stock', DB.stock, stockKey);
-    if (DB.caja.length > 0) await syncRows('kvn_caja', DB.caja, cajaKey);
-
-    console.log('[KBI] Sincronizacion completada. Comp:', DB.comp.length, 'Movp:', DB.movp.length, 'Stock:', DB.stock.length, 'Caja:', DB.caja.length);
-  } catch (err) {
-    console.error('[KBI] Error sincronizando con Supabase:', err);
-    throw err;
+    var id_session = 'suc_' + (SUCURSALES[0] || 'default').replace(/\s/g,'_').toLowerCase();
+    var payload = { comp: DB.comp, movp: DB.movp, stock: DB.stock, caja: DB.caja, loaded: LOADED, sucursales: SUCURSALES };
+    var { data, error } = await window.supabaseClient.from('dashboard_cargas').upsert({ id: id_session, payload_json: payload, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+    if (error) throw error;
+    console.log('[SUPABASE] Sincronización exitosa (' + id_session + ')');
+    updateCloudUI('ok');
+  } catch (e) {
+    console.error('[SUPABASE] Error en sincronización:', e);
+    updateCloudUI('error');
   }
 }
 
@@ -90,6 +95,7 @@ async function syncRows(table, rows, keyFn) {
 }
 
 export async function loadAllData() {
+  updateCloudUI('syncing');
   let success = false;
 
   if (supabase) {
@@ -148,13 +154,21 @@ export async function loadAllData() {
         success = true;
       } else if (sucsData.length > 0) {
         success = true;
+      } else {
+        success = true; // No data yet, but connection was OK
       }
     } catch (err) {
       console.error('[KBI] Error cargando de Supabase, usando IndexedDB:', err);
+      updateCloudUI('error');
     }
+  } else {
+    updateCloudUI('error');
   }
 
-  if (success) return true;
+  if (success) {
+      updateCloudUI('ok');
+      return true;
+  }
 
   // Fallback to IndexedDB
   if (!window.localforage) return false;
