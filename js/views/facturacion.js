@@ -289,14 +289,17 @@ export function renderHorarioPico(tkts) {
 
   var container = document.getElementById('chart-hora');
   var card = document.getElementById('hora-card');
+  var emptyDiv = document.getElementById('chart-hora-empty');
   if(!container || !card) return;
 
   if(hasHours) {
     card.style.display = 'block';
+    container.style.display = 'block';
+    if(emptyDiv) emptyDiv.style.display = 'none';
     if(!window.chartHora) window.chartHora = window.echarts.init(container);
     
     var hKeys = Object.keys(hData).filter(h => hData[h].tkt > 0).map(Number);
-    if (!hKeys.length) { card.style.display = 'none'; return; }
+    if (!hKeys.length) return; 
     
     var minH = Math.min(...hKeys);
     var maxH = Math.max(...hKeys);
@@ -338,7 +341,9 @@ export function renderHorarioPico(tkts) {
       ]
     });
   } else {
-    card.style.display = 'none';
+    card.style.display = 'block';
+    container.style.display = 'none';
+    if(emptyDiv) emptyDiv.style.display = 'block';
   }
 }
 
