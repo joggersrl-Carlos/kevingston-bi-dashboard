@@ -499,7 +499,9 @@ function doParseMovp(rows,suc){
       desc_prod:getCol(r,'DESCRIPCION_PRODUCTO'),salida:pNum(getCol(r,'CANTIDAD_SALIDA')),
       entrada:pNum(getCol(r,'CANTIDAD_ENTRADA')),importe:pMoney(getCol(r,'IMPORTE_VALORIZACION')),
       vend_raw:vRaw,vend_cod:vendCod(vRaw),vend_nombre:vendNombre(vRaw),
-      rubro:getCol(r,'RUBRO'),subrubro:getCol(r,'SUBRUBRO'),talle:getCol(r,'CODIGO_TALLE'),color:getCol(r,'CODIGO_COLOR'),
+      rubro:getCol(r,'RUBRO') || getCol(r,'NOMBRE_CLASIFICACION_2') || getCol(r,'FAMILIA'),
+      subrubro:getCol(r,'SUBRUBRO') || getCol(r,'NOMBRE_CLASIFICACION_3') || getCol(r,'CLASIFICACION_3') || getCol(r,'SUBFAMILIA') || getCol(r,'NOMBRE_RUBRO'),
+      talle:getCol(r,'CODIGO_TALLE'),color:getCol(r,'CODIGO_COLOR'),
       tipo_comp:getCol(r,'TIPO_COMPROBANTE')||getCol(r,'ID_TIPO_COMPROBANTE')||getCol(r,'TIPO'),
       concepto:getCol(r,'CONCEPTO')||getCol(r,'DESCRIPCION_MOVIMIENTO')});
   });
@@ -512,7 +514,7 @@ function doParseStock(rows,suc){
   if(rows.length>0){
     Object.keys(rows[0]).forEach(function(k){
       var ku=k.toUpperCase().replace(/[^A-Z0-9]/g,'');
-      if(ku==='NOMBRERUBRO' || ku==='SUBRUBRO' || ku==='NOMBRESUBRUBRO' || ku==='SUBFAMILIA') colNombreRubro=k;
+      if(ku.indexOf('SUBRUBRO')!==-1 || ku==='NOMBRERUBRO' || ku==='SUBFAMILIA' || ku.indexOf('CLASIFICACION3')!==-1) colNombreRubro=k;
       if(ku==='NOMBRECLASIFICACION2' || ku==='RUBRO' || ku==='FAMILIA' || ku==='CLASIFICACION2') colNombreClas2=k;
       if(ku==='NOMBRECLASIFICACION1' || ku==='GENERO' || ku==='CLASIFICACION1') colNombreClas1=k;
     });
@@ -522,14 +524,14 @@ function doParseStock(rows,suc){
     var np=getCol(r,'NOMBRE_PRODUCTO'),cp=getCol(r,'CODIGO_PRODUCTO');
     if(!np&&!cp)return;
 
-    var rawRubro = colNombreClas2 ? ST(r[colNombreClas2]||'') : (getCol(r,'NOMBRE_CLASIFICACION_2') || getCol(r,'RUBRO'));
+    var rawRubro = colNombreClas2 ? ST(r[colNombreClas2]||'') : (getCol(r,'NOMBRE_CLASIFICACION_2') || getCol(r,'RUBRO') || getCol(r,'FAMILIA'));
     if(rawRubro && rawRubro !== lastRubroPadre){ 
       lastRubroPadre = rawRubro; 
       lastSubRubro = ''; // Reset subrubro when parent changes
     }
     var rubro = lastRubroPadre || '—';
 
-    var rawSub = colNombreRubro ? ST(r[colNombreRubro]||'') : (getCol(r,'NOMBRE_RUBRO') || getCol(r,'SUBRUBRO'));
+    var rawSub = colNombreRubro ? ST(r[colNombreRubro]||'') : (getCol(r,'NOMBRE_RUBRO') || getCol(r,'SUBRUBRO') || getCol(r,'NOMBRE_CLASIFICACION_3') || getCol(r,'CLASIFICACION_3'));
     if(rawSub) lastSubRubro = rawSub;
     var subrubro = lastSubRubro || '—';
 
