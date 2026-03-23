@@ -628,7 +628,21 @@ function handleFiles(ev, renderLoadedFn, buildFiltersFn, doRenderFn){
           if(t==='movp') parsed=doParseMovp(rows,suc);
           if(t==='stock')parsed=doParseStock(rows,suc);
           if(t==='caja') parsed=doParseCaja(rows,suc);
-          parsed.forEach(function(r){var k=makeKey(t,r);if(!SEEN[t][k]){addDBRecord(t, k, r);added++;}});
+          parsed.forEach(function(r){
+            var k=makeKey(t,r);
+            if(!SEEN[t][k]){
+               addDBRecord(t, k, r);
+               added++;
+            } else {
+               for(var xi=0; xi<DB[t].length; xi++){
+                 if(makeKey(t, DB[t][xi]) === k) {
+                    DB[t][xi] = r;
+                    break;
+                 }
+               }
+               added++;
+            }
+          });
         } else {
           console.warn('[KBI] Header no encontrado para "'+t+'" — buscando:',keys.join(', '));
           failedFiles.push(file.name);
