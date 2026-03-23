@@ -142,7 +142,7 @@ export function renderFact(){
   var sM=groupSum(tkts,'sucursal',['importe']),sU2={};
   movp.forEach(function(r){sU2[r.sucursal]=(sU2[r.sucursal]||0)+r.salida;});
   var cSel=getC();
-  var sRows=SUCURSALES.filter(function(s){return sM[s]||sU2[s];}).map(function(s){var imp=sM[s]?sM[s].importe:0,u=sU2[s]?sU2[s].salida:0,t=0;tkts.forEach(function(r){if(r.sucursal===s)t++;});return{k:s,i:imp,u:u,t:t};}).sort(function(a,b){return b.i-a.i;});
+  var sRows=SUCURSALES.filter(function(s){return sM[s]||sU2[s];}).map(function(s){var imp=sM[s]?sM[s].importe:0,u=sU2[s]||0,t=0;tkts.forEach(function(r){if(r.sucursal===s)t++;});return{k:s,i:imp,u:u,t:t};}).sort(function(a,b){return b.i-a.i;});
   var hlIdx=undefined;if(cSel)for(var i=0;i<sRows.length;i++)if(sRows[i].k===cSel){hlIdx=i;break;}
   
   document.getElementById('tbl-suc').innerHTML=buildTable(
