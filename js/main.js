@@ -235,14 +235,19 @@ window.triggerUpload = function() {
   const suc = document.getElementById('sucSelect').value;
   if (!suc) {
     document.getElementById('sucSelect').style.borderColor = '#e05252';
-    setTimeout(() => document.getElementById('sucSelect').style.borderColor = '', 2000);
+    if(window.showToast) window.showToast('❌ Primero tenés que crear una Sucursal en el Paso 1 para asignarle los Excel.', 'error', 5000);
+    setTimeout(() => { if(document.getElementById('sucSelect')) document.getElementById('sucSelect').style.borderColor = ''; }, 2000);
+    
+    const b = document.getElementById('config-body');
+    const a = document.getElementById('config-arrow');
+    if(b && a && !b.classList.contains('open')) { b.classList.add('open'); a.classList.add('open'); }
+    
+    const inp = document.getElementById('sucNameInput');
+    if(inp) { inp.focus(); inp.style.borderColor='#e05252'; setTimeout(()=>inp.style.borderColor='', 2000); }
     return;
   }
   const fi = document.getElementById('fi');
-  if(fi) {
-    fi.value = '';
-    fi.click();
-  }
+  if(fi) { fi.value = ''; fi.click(); }
 };
 
 window.handleFiles = function(ev) {
