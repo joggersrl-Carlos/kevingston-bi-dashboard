@@ -222,6 +222,7 @@ window.addEventListener('resize', function() {
   if (window.chartRubro) window.chartRubro.resize();
 });
 
+showToast('☁️ Sincronizando datos automáticamente...', 'info', 3000);
 loadAllData().then(function(hasData) {
   console.log('[KBI] Storage loaded, hasData:', hasData);
   renderLoaded();
@@ -229,10 +230,14 @@ loadAllData().then(function(hasData) {
   renderSucursales();
   initEvents();
   doRender();
+  if (hasData) {
+    showToast('✅ Datos sincronizados', 'success', 3000);
+  }
 }).catch(err => {
   console.error('[KBI] Init error:', err);
   initEvents();
   doRender();
+  showToast('❌ Error sincronizando', 'error', 3000);
 });
 window.diagnostico = function() {
   var MNAMES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
