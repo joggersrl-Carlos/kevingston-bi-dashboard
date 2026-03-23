@@ -126,10 +126,10 @@ export function renderProd(){
     var tcRubM = document.body.classList.contains('light-mode') ? '#64748b' : '#8a8680';
     window.chartRubro.setOption({
       tooltip:{trigger:'item',formatter:'<b>{b}</b><br/>Venta: {c} un. ({d}%)'},
-      legend:{type:'scroll',orient:'vertical',right:0,top:'middle',textStyle:{color:tcRubM,fontSize:10},pageTextStyle:{color:tcRubM}},
+      legend:{type:'scroll',orient:'horizontal',bottom:0,left:'center',textStyle:{color:tcRubM,fontSize:10},pageTextStyle:{color:tcRubM}},
       color:PALETTE,
       series:[{
-        name:'Rubro',type:'pie',radius:['40%','70%'],center:['40%','50%'],
+        name:'Rubro',type:'pie',radius:['35%','65%'],center:['50%','45%'],
         itemStyle:{borderColor:'#2a2a2a',borderWidth:2},
         label:{show:false},
         data:rubroList.map(function(r){return{name:r.k,value:r.u};}).filter(function(d){return d.value>0;})
