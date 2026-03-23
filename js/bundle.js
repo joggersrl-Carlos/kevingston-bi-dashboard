@@ -1729,19 +1729,47 @@ function initEvents() {
   }
 
   const fAnio = document.getElementById('fAnio');
-  if(fAnio) fAnio.onchange = doRender;
+  if(fAnio) {
+    fAnio.addEventListener('change', () => {
+      var d = document.getElementById('fDesde'), h = document.getElementById('fHasta');
+      if(d) d.value = '';
+      if(h) h.value = '';
+      doRender();
+    });
+  }
   
   const fMes = document.getElementById('fMes');
-  if(fMes) fMes.onchange = doRender;
+  if(fMes) {
+    fMes.addEventListener('change', () => {
+      var d = document.getElementById('fDesde'), h = document.getElementById('fHasta');
+      if(d) d.value = '';
+      if(h) h.value = '';
+      doRender();
+    });
+  }
   
   const fCaja = document.getElementById('fCaja');
-  if(fCaja) fCaja.onchange = doRender;
+  if(fCaja) fCaja.addEventListener('change', doRender);
 
   const fDesde = document.getElementById('fDesde');
-  if(fDesde) fDesde.onchange = doRender;
+  if(fDesde) {
+    fDesde.addEventListener('change', () => {
+      var a = document.getElementById('fAnio'), m = document.getElementById('fMes');
+      if(a) a.value = '0';
+      if(m) m.value = '0';
+      doRender();
+    });
+  }
 
   const fHasta = document.getElementById('fHasta');
-  if(fHasta) fHasta.onchange = doRender;
+  if(fHasta) {
+    fHasta.addEventListener('change', () => {
+      var a = document.getElementById('fAnio'), m = document.getElementById('fMes');
+      if(a) a.value = '0';
+      if(m) m.value = '0';
+      doRender();
+    });
+  }
 
   const btnExport = document.getElementById('btnExportPDF');
   if(btnExport) btnExport.addEventListener('click', () => {
