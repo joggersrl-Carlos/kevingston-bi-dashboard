@@ -227,6 +227,7 @@ window.addEventListener('resize', function() {
   if (window.chartRubro) window.chartRubro.resize();
   if (window.chartYOY) window.chartYOY.resize();
   if (window.chartResu) window.chartResu.resize();
+  if (window.chartHora) window.chartHora.resize();
 });
 
 showToast('☁️ Sincronizando datos automáticamente...', 'info', 3000);

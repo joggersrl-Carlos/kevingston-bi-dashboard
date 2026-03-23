@@ -9,8 +9,14 @@ function pDate(v){
   var s=String(v).trim();
   var sn=parseFloat(s);
   if(!isNaN(sn)&&sn>30000&&sn<70000&&!/[,\/\-]/.test(s)){var d=new Date(Math.round((sn-25569)*86400*1000));if(!isNaN(d.getTime())&&d.getFullYear()>=1900&&d.getFullYear()<=2100)return d;}
-  var m=s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
-  if(m){var y=parseInt(m[3]);if(y<100)y+=2000;return new Date(y,parseInt(m[2])-1,parseInt(m[1]));}
+  var m=s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})(?:\s+(\d{1,2})[:\.](\d{1,2})(?:[:\.](\d{1,2}))?)?$/);
+  if(m){
+     var y=parseInt(m[3]);if(y<100)y+=2000;
+     var hr=m[4]?parseInt(m[4]):0;
+     var min=m[5]?parseInt(m[5]):0;
+     var sec=m[6]?parseInt(m[6]):0;
+     return new Date(y,parseInt(m[2])-1,parseInt(m[1]),hr,min,sec);
+  }
   m=s.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
   if(m)return new Date(parseInt(m[1]),parseInt(m[2])-1,parseInt(m[3]));
   var d2=new Date(s);return isNaN(d2.getTime())?null:d2;
@@ -493,7 +499,15 @@ function doParseComp(rows,suc){
   rows.forEach(function(r){
     var fecha=pDate(getCol(r,'FECHA'));var imp=pMoney(getCol(r,'IMPORTE_TOTAL'));if(!fecha||!imp)return;
     var vRaw=getCol(r,'VENDEDOR');
-    out.push({sucursal:suc,fecha:fecha,anio:fecha.getFullYear(),mes:fecha.getMonth()+1,dia:fecha.getDate(),dow:fecha.getDay(),
+    
+    var hora = fecha.getHours();
+    var hRaw = getCol(r,'HORA') || getCol(r,'HORA_ALTA') || getCol(r,'HORA_COMPROBANTE');
+    if (hora === 0 && hRaw) {
+      if (typeof hRaw === 'number' && hRaw < 1) hora = Math.floor(hRaw * 24);
+      else { var hs = String(hRaw).match(/(\d{1,2}):/); if(hs) hora = parseInt(hs[1]); }
+    }
+
+    out.push({sucursal:suc,fecha:fecha,anio:fecha.getFullYear(),mes:fecha.getMonth()+1,dia:fecha.getDate(),dow:fecha.getDay(),hora:hora,
       nro:getCol(r,'NUMERO_COMPROBANTE')||getCol(r,'NUMERO'),prefijo:getCol(r,'PREFIJO'),letra:getCol(r,'LETRA'),
       tipo_comp:getCol(r,'DESCRIPCION_COMPROBANTE')||getCol(r,'ID_TIPO_COMPROBANTE'),
       cliente:getCol(r,'NOMBRE_CLIENTE')||'CONSUMIDOR FINAL',importe:imp,
@@ -858,6 +872,7 @@ function renderFact(){
   renderDowRanking(tkts,movp);
   renderMensualFact(tkts,movp);
   renderMensualUni(tkts,movp);
+  renderHorarioPico(tkts);
 
   // YoY Chart Logic
   var validComps = getValidComps();
@@ -912,6 +927,75 @@ function renderFact(){
     yoyCard.style.display = 'none';
   }
 }
+
+function renderHorarioPico(tkts) {
+  var hData = {};
+  for(let i=0; i<24; i++) hData[i] = { tkt: 0, imp: 0 };
+  
+  var hasHours = false;
+  tkts.forEach(function(r) {
+    if(r.hora != null && r.hora >= 0 && r.hora < 24) {
+      hData[r.hora].tkt++;
+      hData[r.hora].imp += r.importe;
+      hasHours = true;
+    }
+  });
+
+  var container = document.getElementById('chart-hora');
+  var card = document.getElementById('hora-card');
+  if(!container || !card) return;
+
+  if(hasHours) {
+    card.style.display = 'block';
+    if(!window.chartHora) window.chartHora = window.echarts.init(container);
+    
+    var hKeys = Object.keys(hData).filter(h => hData[h].tkt > 0).map(Number);
+    if (!hKeys.length) { card.style.display = 'none'; return; }
+    
+    var minH = Math.min(...hKeys);
+    var maxH = Math.max(...hKeys);
+    if (minH > 6) minH = 6;
+    if (maxH < 22) maxH = 22;
+    
+    var xAxisData = [];
+    var seriesDataTkt = [];
+    var seriesDataImp = [];
+    for(let i=minH; i<=maxH; i++) {
+       xAxisData.push(i+':00');
+       seriesDataTkt.push(hData[i] ? hData[i].tkt : 0);
+       seriesDataImp.push(hData[i] ? hData[i].imp : 0);
+    }
+
+    var tcM = document.body.classList.contains('light-mode') ? '#64748b' : '#8a8680';
+    var tc = document.body.classList.contains('light-mode') ? '#334155' : '#f0ede8';
+
+    window.chartHora.setOption({
+      backgroundColor: 'transparent',
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p){
+          var h = '<div style="font-family:Inter"><b>'+p[0].axisValue+' - '+(parseInt(p[0].axisValue)+1)+':00</b><br/>';
+          p.forEach(s => {
+             var val = s.seriesName==='Facturación' ? '$ '+s.value.toLocaleString('es-AR') : s.value+' tkts';
+             h += s.marker + ' ' + s.seriesName + ': <b>' + val + '</b><br/>';
+          });
+          return h+'</div>';
+      } },
+      legend: { data: ['Facturación', 'Tickets'], textStyle: { color: tc, fontFamily:'Inter' }, bottom: 0 },
+      grid: { left: '3%', right: '4%', bottom: '15%', top: '12%', containLabel: true },
+      xAxis: [{ type: 'category', data: xAxisData, axisLabel: { color: tcM, fontFamily:'Inter' } }],
+      yAxis: [
+        { type: 'value', name: '$', nameTextStyle: {color:'#c9a96e'}, axisLabel: {color:tcM, fontFamily:'Inter', formatter: v => '$ '+(v>=1000?(v/1000).toFixed(0)+'k':v)}, splitLine:{lineStyle:{color:'rgba(255,255,255,0.05)'}} },
+        { type: 'value', name: 'Tkts', nameTextStyle: {color:'#5a9fd4'}, axisLabel: {color:tcM, fontFamily:'Inter'}, splitLine: {show:false} }
+      ],
+      series: [
+        { name: 'Facturación', type: 'bar', yAxisIndex: 0, data: seriesDataImp, itemStyle: {color: '#c9a96e', borderRadius: [4,4,0,0]} },
+        { name: 'Tickets', type: 'line', smooth: true, yAxisIndex: 1, data: seriesDataTkt, itemStyle: {color: '#5a9fd4'}, lineStyle: {width: 3} }
+      ]
+    });
+  } else {
+    card.style.display = 'none';
+  }
+}
+
 
 // === js/views/vendedor.js ===
 
@@ -1530,6 +1614,7 @@ window.addEventListener('resize', function() {
   if (window.chartRubro) window.chartRubro.resize();
   if (window.chartYOY) window.chartYOY.resize();
   if (window.chartResu) window.chartResu.resize();
+  if (window.chartHora) window.chartHora.resize();
 });
 
 showToast('☁️ Sincronizando datos automáticamente...', 'info', 3000);

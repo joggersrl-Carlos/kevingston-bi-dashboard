@@ -7,8 +7,14 @@ export function pDate(v){
   var s=String(v).trim();
   var sn=parseFloat(s);
   if(!isNaN(sn)&&sn>30000&&sn<70000&&!/[,\/\-]/.test(s)){var d=new Date(Math.round((sn-25569)*86400*1000));if(!isNaN(d.getTime())&&d.getFullYear()>=1900&&d.getFullYear()<=2100)return d;}
-  var m=s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
-  if(m){var y=parseInt(m[3]);if(y<100)y+=2000;return new Date(y,parseInt(m[2])-1,parseInt(m[1]));}
+  var m=s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})(?:\s+(\d{1,2})[:\.](\d{1,2})(?:[:\.](\d{1,2}))?)?$/);
+  if(m){
+     var y=parseInt(m[3]);if(y<100)y+=2000;
+     var hr=m[4]?parseInt(m[4]):0;
+     var min=m[5]?parseInt(m[5]):0;
+     var sec=m[6]?parseInt(m[6]):0;
+     return new Date(y,parseInt(m[2])-1,parseInt(m[1]),hr,min,sec);
+  }
   m=s.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
   if(m)return new Date(parseInt(m[1]),parseInt(m[2])-1,parseInt(m[3]));
   var d2=new Date(s);return isNaN(d2.getTime())?null:d2;

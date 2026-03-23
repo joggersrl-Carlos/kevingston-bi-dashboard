@@ -15,7 +15,15 @@ export function doParseComp(rows,suc){
   rows.forEach(function(r){
     var fecha=pDate(getCol(r,'FECHA'));var imp=pMoney(getCol(r,'IMPORTE_TOTAL'));if(!fecha||!imp)return;
     var vRaw=getCol(r,'VENDEDOR');
-    out.push({sucursal:suc,fecha:fecha,anio:fecha.getFullYear(),mes:fecha.getMonth()+1,dia:fecha.getDate(),dow:fecha.getDay(),
+    
+    var hora = fecha.getHours();
+    var hRaw = getCol(r,'HORA') || getCol(r,'HORA_ALTA') || getCol(r,'HORA_COMPROBANTE');
+    if (hora === 0 && hRaw) {
+      if (typeof hRaw === 'number' && hRaw < 1) hora = Math.floor(hRaw * 24);
+      else { var hs = String(hRaw).match(/(\d{1,2}):/); if(hs) hora = parseInt(hs[1]); }
+    }
+
+    out.push({sucursal:suc,fecha:fecha,anio:fecha.getFullYear(),mes:fecha.getMonth()+1,dia:fecha.getDate(),dow:fecha.getDay(),hora:hora,
       nro:getCol(r,'NUMERO_COMPROBANTE')||getCol(r,'NUMERO'),prefijo:getCol(r,'PREFIJO'),letra:getCol(r,'LETRA'),
       tipo_comp:getCol(r,'DESCRIPCION_COMPROBANTE')||getCol(r,'ID_TIPO_COMPROBANTE'),
       cliente:getCol(r,'NOMBRE_CLIENTE')||'CONSUMIDOR FINAL',importe:imp,

@@ -218,6 +218,7 @@ export function renderFact(){
   renderDowRanking(tkts,movp);
   renderMensualFact(tkts,movp);
   renderMensualUni(tkts,movp);
+  renderHorarioPico(tkts);
 
   // YoY Chart Logic
   var validComps = getValidComps();
@@ -272,3 +273,72 @@ export function renderFact(){
     yoyCard.style.display = 'none';
   }
 }
+
+export function renderHorarioPico(tkts) {
+  var hData = {};
+  for(let i=0; i<24; i++) hData[i] = { tkt: 0, imp: 0 };
+  
+  var hasHours = false;
+  tkts.forEach(function(r) {
+    if(r.hora != null && r.hora >= 0 && r.hora < 24) {
+      hData[r.hora].tkt++;
+      hData[r.hora].imp += r.importe;
+      hasHours = true;
+    }
+  });
+
+  var container = document.getElementById('chart-hora');
+  var card = document.getElementById('hora-card');
+  if(!container || !card) return;
+
+  if(hasHours) {
+    card.style.display = 'block';
+    if(!window.chartHora) window.chartHora = window.echarts.init(container);
+    
+    var hKeys = Object.keys(hData).filter(h => hData[h].tkt > 0).map(Number);
+    if (!hKeys.length) { card.style.display = 'none'; return; }
+    
+    var minH = Math.min(...hKeys);
+    var maxH = Math.max(...hKeys);
+    if (minH > 6) minH = 6;
+    if (maxH < 22) maxH = 22;
+    
+    var xAxisData = [];
+    var seriesDataTkt = [];
+    var seriesDataImp = [];
+    for(let i=minH; i<=maxH; i++) {
+       xAxisData.push(i+':00');
+       seriesDataTkt.push(hData[i] ? hData[i].tkt : 0);
+       seriesDataImp.push(hData[i] ? hData[i].imp : 0);
+    }
+
+    var tcM = document.body.classList.contains('light-mode') ? '#64748b' : '#8a8680';
+    var tc = document.body.classList.contains('light-mode') ? '#334155' : '#f0ede8';
+
+    window.chartHora.setOption({
+      backgroundColor: 'transparent',
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p){
+          var h = '<div style="font-family:Inter"><b>'+p[0].axisValue+' - '+(parseInt(p[0].axisValue)+1)+':00</b><br/>';
+          p.forEach(s => {
+             var val = s.seriesName==='Facturación' ? '$ '+s.value.toLocaleString('es-AR') : s.value+' tkts';
+             h += s.marker + ' ' + s.seriesName + ': <b>' + val + '</b><br/>';
+          });
+          return h+'</div>';
+      } },
+      legend: { data: ['Facturación', 'Tickets'], textStyle: { color: tc, fontFamily:'Inter' }, bottom: 0 },
+      grid: { left: '3%', right: '4%', bottom: '15%', top: '12%', containLabel: true },
+      xAxis: [{ type: 'category', data: xAxisData, axisLabel: { color: tcM, fontFamily:'Inter' } }],
+      yAxis: [
+        { type: 'value', name: '$', nameTextStyle: {color:'#c9a96e'}, axisLabel: {color:tcM, fontFamily:'Inter', formatter: v => '$ '+(v>=1000?(v/1000).toFixed(0)+'k':v)}, splitLine:{lineStyle:{color:'rgba(255,255,255,0.05)'}} },
+        { type: 'value', name: 'Tkts', nameTextStyle: {color:'#5a9fd4'}, axisLabel: {color:tcM, fontFamily:'Inter'}, splitLine: {show:false} }
+      ],
+      series: [
+        { name: 'Facturación', type: 'bar', yAxisIndex: 0, data: seriesDataImp, itemStyle: {color: '#c9a96e', borderRadius: [4,4,0,0]} },
+        { name: 'Tickets', type: 'line', smooth: true, yAxisIndex: 1, data: seriesDataTkt, itemStyle: {color: '#5a9fd4'}, lineStyle: {width: 3} }
+      ]
+    });
+  } else {
+    card.style.display = 'none';
+  }
+}
+
