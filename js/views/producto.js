@@ -157,6 +157,7 @@ export function renderProd(){
   var rubroVenta={},rubroStock={}, rubroImporte={};
   movpF.forEach(function(r){
     var rb=stockRubroMap[r.cod_prod] || r.rubro || '—';
+    if(rb.replace) rb = rb.replace(/BAĐO/g, 'BAÑO').replace(/BAÃ‘O/g,'BAÑO');
     if(!rubroVenta[rb])rubroVenta[rb]=0;
     rubroVenta[rb]+=r.salida;
     if(!rubroImporte[rb])rubroImporte[rb]=0;
@@ -164,6 +165,7 @@ export function renderProd(){
   });
   stockF.forEach(function(r){
     var rb=r.nombre_rubro||'—';
+    if(rb.replace) rb = rb.replace(/BAĐO/g, 'BAÑO').replace(/BAÃ‘O/g,'BAÑO');
     if(!rubroStock[rb])rubroStock[rb]=0;
     rubroStock[rb]+=r.stock;
   });
