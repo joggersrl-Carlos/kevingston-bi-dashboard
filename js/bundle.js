@@ -361,64 +361,39 @@ async function loadAllData() {
   updateCloudUI('syncing');
   let success = false;
 
-  if (supabase) {
+  if (window.supabaseClient) {
     try {
       console.log('[KBI] Intentando cargar datos de Supabase...');
-      const sucsData = await fetchAll('kvn_sucursales');
+      const { data, error } = await window.supabaseClient.from('dashboard_cargas').select('*').order('updated_at', { ascending: false }).limit(1);
 
-      if (sucsData.length > 0) {
-        setSucursales(sucsData.map(s => s.name));
-      }
-
-      // Load all data tables regardless of kvn_loaded status
-      const [loadedData, compData, movpData, stockData, cajaData] = await Promise.all([
-        fetchAll('kvn_loaded', 'created_at'),
-        fetchAll('kvn_comp'),
-        fetchAll('kvn_movp'),
-        fetchAll('kvn_stock'),
-        fetchAll('kvn_caja')
-      ]);
-
-      const hasData = compData.length > 0 || movpData.length > 0 || stockData.length > 0 || cajaData.length > 0;
-
-      if (hasData) {
+      if (data && data.length > 0 && data[0].payload_json) {
+        var payload = data[0].payload_json;
+        setSucursales(payload.sucursales || []);
         clearDB('comp', true); clearDB('movp', true); clearDB('stock', true); clearDB('caja', true);
 
-        compData.forEach(r => addDBRecord('comp', r.id, r));
-        movpData.forEach(r => addDBRecord('movp', r.id, r));
-        stockData.forEach(r => addDBRecord('stock', r.id, r));
-        cajaData.forEach(r => addDBRecord('caja', r.id, r));
+        var compD = payload.comp || [];
+        var movpD = payload.movp || [];
+        var stockD = payload.stock || [];
+        var cajaD = payload.caja || [];
 
-        if (loadedData.length > 0) {
-          setLoaded(loadedData);
-        } else {
-          // kvn_loaded is empty — synthesize chips from data so the UI shows loaded files
-          var synthesized = [];
-          var countBySuc = function(arr) {
-            var m = {};
-            arr.forEach(r => { if (r.sucursal) m[r.sucursal] = (m[r.sucursal] || 0) + 1; });
-            return m;
-          };
-          var addChips = function(arr, type, typeName) {
-            var m = countBySuc(arr);
-            Object.keys(m).forEach(s => {
-              synthesized.push({ id: 'synth-' + type + '-' + s, suc: s, type: type, typeName: typeName, files: 1, n: m[s] });
-            });
-          };
-          addChips(compData, 'comp', 'Comprobantes');
-          addChips(movpData, 'movp', 'Mov. Productos');
-          addChips(stockData, 'stock', 'Stock');
-          addChips(cajaData, 'caja', 'Caja');
-          setLoaded(synthesized);
-          console.log('[KBI] kvn_loaded vacio — chips sintetizados:', synthesized.length);
+        function mkK(t,r){
+          if(t==='comp') return r.sucursal+'|'+r.prefijo+'|'+r.nro+'|'+r.letra+'|'+r.secuencia+'|'+r.tipo_pago;
+          if(t==='movp') return r.sucursal+'|'+r.anio+'|'+r.mes+'|'+r.dia+'|'+r.nro_comp+'|'+r.cod_prod+'|'+r.salida;
+          if(t==='stock')return r.sucursal+'|'+r.cod_prod+'|'+r.nombre_prod+'|'+r.talle+'|'+r.color;
+          if(t==='caja') return r.sucursal+'|'+r.anio+'|'+r.mes+'|'+r.dia;
+          return Math.random().toString(36);
         }
 
-        console.log('[KBI] Cargados de Supabase — Comp:', compData.length, 'Movp:', movpData.length, 'Stock:', stockData.length, 'Caja:', cajaData.length);
-        success = true;
-      } else if (sucsData.length > 0) {
+        compD.forEach(r => addDBRecord('comp', mkK('comp', r), r));
+        movpD.forEach(r => addDBRecord('movp', mkK('movp', r), r));
+        stockD.forEach(r => addDBRecord('stock', mkK('stock', r), r));
+        cajaD.forEach(r => addDBRecord('caja', mkK('caja', r), r));
+
+        setLoaded(payload.loaded || []);
+        console.log('[KBI] Cargados de Supabase (JSON) — Comp:', compD.length, 'Movp:', movpD.length, 'Stock:', stockD.length, 'Caja:', cajaD.length);
         success = true;
       } else {
-        success = true; // No data yet, but connection was OK
+        console.log('[KBI] No hay datos en dashboard_cargas aún.');
       }
     } catch (err) {
       console.error('[KBI] Error cargando de Supabase, usando IndexedDB:', err);
