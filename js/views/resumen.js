@@ -1,5 +1,5 @@
 import { emptyMsg, fm, fn, uniqueTickets } from '../utils.js';
-import { fComp, fMovp } from '../state.js';
+import { fComp, fMovp, fStock } from '../state.js';
 import { buildTable, mkTH, mkTD } from '../components/tables.js';
 
 export function renderResumen() {
@@ -7,7 +7,7 @@ export function renderResumen() {
   if(!comp.length && !movp.length) {
     document.getElementById('kpi-resu').innerHTML = emptyMsg('Configurá las sucursales y cargá los archivos para ver el Resumen Ejecutivo.');
     document.getElementById('tbl-resu-vend').innerHTML = '';
-    document.getElementById('tbl-resu-prod').innerHTML = '';
+    document.getElementById('tbl-resu-rubro').innerHTML = '';
     document.getElementById('chart-resu-tendencia').style.display = 'none';
     return;
   }
@@ -32,19 +32,21 @@ export function renderResumen() {
      return { nombre: vComp[cod].nombre, imp: vComp[cod].imp, uni: vMovp[cod] || 0 };
   }).sort(function(a,b) { return b.imp - a.imp; });
   
-  // Top Productos
-  var prodV = {}; var prodCod = {};
+  // Top Rubros
+  var stock = fStock();
+  var stockRubroMap={}; stock.forEach(function(r){if(r.cod_prod&&r.nombre_rubro)stockRubroMap[r.cod_prod]=r.nombre_rubro;});
+  var rubroV = {};
   movp.forEach(function(r) {
-     if(!prodV[r.cod_prod]) prodV[r.cod_prod] = 0;
-     prodV[r.cod_prod] += r.salida;
-     prodCod[r.cod_prod] = r.nombre_prod;
+     var rb = stockRubroMap[r.cod_prod] || r.rubro || '—';
+     if(!rubroV[rb]) rubroV[rb] = 0;
+     rubroV[rb] += r.salida;
   });
-  var prodArr = Object.keys(prodV).filter(function(k){return k&&k!=='—';}).map(function(k){
-     return { cod: k, nombre: prodCod[k] || k, uni: prodV[k] };
+  var rubroArr = Object.keys(rubroV).filter(function(k){return k&&k!=='—';}).map(function(k){
+     return { nombre: k, uni: rubroV[k] };
   }).sort(function(a,b){ return b.uni - a.uni; });
 
   var topVend = vendArr.length ? vendArr[0].nombre : '-';
-  var topProd = prodArr.length ? prodArr[0].nombre : '-';
+  var topRubro = rubroArr.length ? rubroArr[0].nombre : '-';
 
   var mkKpiL = function(l,v,cls) { return '<div class="kpi"><div class="kpi-label">'+l+'</div><div class="kpi-val '+(cls||'')+'">'+v+'</div></div>'; };
   document.getElementById('kpi-resu').innerHTML = 
@@ -52,7 +54,7 @@ export function renderResumen() {
     mkKpiL('Unidades', fn(tU)) + 
     mkKpiL('Tickets', fn(tT)) + 
     mkKpiL('Mejor Vendedor', topVend.substring(0,15)) + 
-    mkKpiL('Producto Estrella', topProd.substring(0,20));
+    mkKpiL('Rubro Estrella', topRubro.substring(0,20));
 
   document.getElementById('tbl-resu-vend').innerHTML = buildTable(
     [mkTH('Vendedor'), mkTH('Facturación',true,'i'), mkTH('Unidades',true,'u')],
@@ -60,10 +62,10 @@ export function renderResumen() {
     null, 'tbl-resu-vend'
   );
 
-  document.getElementById('tbl-resu-prod').innerHTML = buildTable(
-    [mkTH('Producto'), mkTH('Unidades',true,'u')],
-    prodArr.slice(0,5).map(function(r){ return [mkTD(r.nombre), mkTD(fn(r.uni),true,r.uni)]; }),
-    null, 'tbl-resu-prod'
+  document.getElementById('tbl-resu-rubro').innerHTML = buildTable(
+    [mkTH('Rubro'), mkTH('Unidades',true,'u')],
+    rubroArr.slice(0,5).map(function(r){ return [mkTD(r.nombre), mkTD(fn(r.uni),true,r.uni)]; }),
+    null, 'tbl-resu-rubro'
   );
 
   // Tendencia 7 días
