@@ -72,6 +72,7 @@ export function renderProd(){
   var stockClas1={};stockF.forEach(function(r){if(r.cod_prod&&r.clas1)stockClas1[r.cod_prod]=r.clas1;});
   movpF.forEach(function(r){
     var g=stockClas1[r.cod_prod]||'—';
+    if(g.toUpperCase()==='NIDO') g='TEENS';
     if(g&&g!=='—'){
       genM[g]=(genM[g]||0)+r.salida;
       genImpM[g]=(genImpM[g]||0)+r.importe;
@@ -80,6 +81,7 @@ export function renderProd(){
   if(!Object.keys(genM).length){
     stockF.forEach(function(r){
       var g=r.clas1||'—';
+      if(g.toUpperCase()==='NIDO') g='TEENS';
       if(g&&g!=='—') {
         genM[g]=(genM[g]||0)+r.unidades;
         genImpM[g]=(genImpM[g]||0)+r.imp_venta;
@@ -96,40 +98,57 @@ export function renderProd(){
   
   if(chartGenderData.length){
     document.getElementById('chart-gender').style.display='block';
+    document.getElementById('chart-gender-pct').style.display='block';
     document.getElementById('chart-gender-pesos').style.display='block';
     
     if(!window.chartGender) window.chartGender=window.echarts.init(document.getElementById('chart-gender'));
+    if(!window.chartGenderPct) window.chartGenderPct=window.echarts.init(document.getElementById('chart-gender-pct'));
     if(!window.chartGenderPesos) window.chartGenderPesos=window.echarts.init(document.getElementById('chart-gender-pesos'));
     
     var tcGen = document.body.classList.contains('light-mode') ? '#334155' : '#f0ede8';
+    
     window.chartGender.setOption({
-      tooltip:{ trigger:'item', formatter:function(p){ return '<b>'+p.name+'</b><br/>'+fn(p.value)+' un. ('+p.percent+'%)'; } },
+      tooltip:{ trigger:'item', formatter:function(p){ return '<b>'+p.name+'</b><br/>'+fn(p.value)+' un.'; } },
       title: { text: fn(tGenTotal) + '\nUnidades', left: 'center', top: 'center', textStyle: { fontSize: 13, fontWeight: 'bold', color: tcGen } },
       legend:{show:false},
       color:['#c9a96e','#5a9fd4','#e07b9a','#52c48a'],
       series:[{
-        name:'Género (Unidades)',type:'pie',radius:['55%','85%'],avoidLabelOverlap:true,
+        name:'Género (Unidades)',type:'pie',radius:['40%','65%'],avoidLabelOverlap:true,
         itemStyle:{borderColor:'#2a2a2a',borderWidth:2},
-        label:{show:true,position:'outside',formatter:'{b}\n{d}%',fontSize:12,fontWeight:'bold',color:tcGen},
+        label:{show:true,position:'outside',formatter:'{b}\n{c} un.',fontSize:11,fontWeight:'bold',color:tcGen},
+        data:chartGenderData.map(function(d){return{name:d.name,value:d.value};})
+      }]
+    });
+
+    window.chartGenderPct.setOption({
+      tooltip:{ trigger:'item', formatter:function(p){ return '<b>'+p.name+'</b><br/>'+p.percent+'%'; } },
+      title: { text: '100% \nPorcentaje', left: 'center', top: 'center', textStyle: { fontSize: 13, fontWeight: 'bold', color: tcGen } },
+      legend:{show:false},
+      color:['#c9a96e','#5a9fd4','#e07b9a','#52c48a'],
+      series:[{
+        name:'Género (Porcentajes)',type:'pie',radius:['40%','65%'],avoidLabelOverlap:true,
+        itemStyle:{borderColor:'#2a2a2a',borderWidth:2},
+        label:{show:true,position:'outside',formatter:'{b}\n{d}%',fontSize:11,fontWeight:'bold',color:tcGen},
         data:chartGenderData.map(function(d){return{name:d.name,value:d.value};})
       }]
     });
 
     window.chartGenderPesos.setOption({
-      tooltip:{ trigger:'item', formatter:function(p){ return '<b>'+p.name+'</b><br/>'+fm(p.value)+' ('+p.percent+'%)'; } },
+      tooltip:{ trigger:'item', formatter:function(p){ return '<b>'+p.name+'</b><br/>'+fm(p.value); } },
       title: { text: fm(tGenImpTotal)+'\nValores', left: 'center', top: 'center', textStyle: { fontSize: 13, fontWeight: 'bold', color: tcGen } },
       legend:{show:false},
-      color:['#ddbe83','#6cb0e6','#ec89a9','#5fd698'],
+      color:['#c9a96e','#5a9fd4','#e07b9a','#52c48a'],
       series:[{
-        name:'Género (Pesos)',type:'pie',radius:['55%','85%'],avoidLabelOverlap:true,
+        name:'Género (Pesos)',type:'pie',radius:['40%','65%'],avoidLabelOverlap:true,
         itemStyle:{borderColor:'#2a2a2a',borderWidth:2},
-        label:{show:true,position:'outside',formatter:'{b}\n{d}%',fontSize:12,fontWeight:'bold',color:tcGen},
+        label:{show:true,position:'outside',formatter:function(p){ return p.name + '\n$' + fn(p.value); },fontSize:11,fontWeight:'bold',color:tcGen},
         data:chartGenderData.map(function(d){return{name:d.name,value:d.importe};}).filter(d=>d.value>0)
       }]
     });
 
   } else {
     document.getElementById('chart-gender').style.display='none';
+    document.getElementById('chart-gender-pct').style.display='none';
     document.getElementById('chart-gender-pesos').style.display='none';
   }
   document.getElementById('gender-block').innerHTML=genH;
