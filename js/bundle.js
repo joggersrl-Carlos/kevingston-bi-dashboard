@@ -1097,49 +1097,80 @@ function renderProd(){
     '<div class="pkpi"><div class="pkpi-val">'+fn(tStock)+'</div><div class="pkpi-label">Stock</div></div>';
 
   var genM={};
+  var genImpM={};
   var stockClas1={};stockF.forEach(function(r){if(r.cod_prod&&r.clas1)stockClas1[r.cod_prod]=r.clas1;});
   movpF.forEach(function(r){
     var g=stockClas1[r.cod_prod]||'—';
-    if(g&&g!=='—')genM[g]=(genM[g]||0)+r.salida;
+    if(g&&g!=='—'){
+      genM[g]=(genM[g]||0)+r.salida;
+      genImpM[g]=(genImpM[g]||0)+r.importe;
+    }
   });
   if(!Object.keys(genM).length){
-    stockF.forEach(function(r){var g=r.clas1||'—';if(g&&g!=='—')genM[g]=(genM[g]||0)+r.unidades;});
+    stockF.forEach(function(r){
+      var g=r.clas1||'—';
+      if(g&&g!=='—') {
+        genM[g]=(genM[g]||0)+r.unidades;
+        genImpM[g]=(genImpM[g]||0)+r.imp_venta;
+      }
+    });
   }
   var tGenTotal=Object.keys(genM).reduce(function(a,k){return a+genM[k];},0)||tVenta;
+  var tGenImpTotal=Object.keys(genImpM).reduce(function(a,k){return a+genImpM[k];},0);
   var genH='';
   var chartGenderData=[];
   Object.keys(genM).sort(function(a,b){return genM[b]-genM[a];}).forEach(function(g){
-    chartGenderData.push({name:g,value:genM[g]});
+    chartGenderData.push({name:g,value:genM[g],importe:genImpM[g]||0});
   });
   
   if(chartGenderData.length){
     document.getElementById('chart-gender').style.display='block';
+    document.getElementById('chart-gender-pesos').style.display='block';
+    
     if(!window.chartGender) window.chartGender=window.echarts.init(document.getElementById('chart-gender'));
+    if(!window.chartGenderPesos) window.chartGenderPesos=window.echarts.init(document.getElementById('chart-gender-pesos'));
+    
     var tcGen = document.body.classList.contains('light-mode') ? '#334155' : '#f0ede8';
     window.chartGender.setOption({
-      tooltip:{trigger:'item',formatter:'<b>{b}</b><br/>{c} un. ({d}%)'},
+      tooltip:{ trigger:'item', formatter:function(p){ return '<b>'+p.name+'</b><br/>'+fn(p.value)+' un. ('+p.percent+'%)'; } },
+      title: { text: fn(tGenTotal) + '\nUnidades', left: 'center', top: 'center', textStyle: { fontSize: 13, fontWeight: 'bold', color: tcGen } },
       legend:{show:false},
       color:['#c9a96e','#5a9fd4','#e07b9a','#52c48a'],
       series:[{
-        name:'Género',type:'pie',radius:['50%','75%'],avoidLabelOverlap:false,
+        name:'Género (Unidades)',type:'pie',radius:['55%','85%'],avoidLabelOverlap:true,
         itemStyle:{borderColor:'#2a2a2a',borderWidth:2},
-        label:{show:true,position:'center',formatter:function(){return fn(tGenTotal)+'\nUnidades';},fontSize:14,fontWeight:'bold',color:tcGen},
-        emphasis:{label:{show:true,fontSize:14,fontWeight:'bold'}},
-        labelLine:{show:false},
-        data:chartGenderData
+        label:{show:true,position:'outside',formatter:'{b}\n{d}%',fontSize:12,fontWeight:'bold',color:tcGen},
+        data:chartGenderData.map(function(d){return{name:d.name,value:d.value};})
       }]
     });
+
+    window.chartGenderPesos.setOption({
+      tooltip:{ trigger:'item', formatter:function(p){ return '<b>'+p.name+'</b><br/>'+fm(p.value)+' ('+p.percent+'%)'; } },
+      title: { text: fm(tGenImpTotal)+'\nValores', left: 'center', top: 'center', textStyle: { fontSize: 13, fontWeight: 'bold', color: tcGen } },
+      legend:{show:false},
+      color:['#ddbe83','#6cb0e6','#ec89a9','#5fd698'],
+      series:[{
+        name:'Género (Pesos)',type:'pie',radius:['55%','85%'],avoidLabelOverlap:true,
+        itemStyle:{borderColor:'#2a2a2a',borderWidth:2},
+        label:{show:true,position:'outside',formatter:'{b}\n{d}%',fontSize:12,fontWeight:'bold',color:tcGen},
+        data:chartGenderData.map(function(d){return{name:d.name,value:d.importe};}).filter(d=>d.value>0)
+      }]
+    });
+
   } else {
     document.getElementById('chart-gender').style.display='none';
+    document.getElementById('chart-gender-pesos').style.display='none';
   }
   document.getElementById('gender-block').innerHTML=genH;
 
   var stockRubroMap={};stockF.forEach(function(r){if(r.cod_prod&&r.nombre_rubro)stockRubroMap[r.cod_prod]=r.nombre_rubro;});
-  var rubroVenta={},rubroStock={};
+  var rubroVenta={},rubroStock={}, rubroImporte={};
   movpF.forEach(function(r){
     var rb=stockRubroMap[r.cod_prod] || r.rubro || '—';
     if(!rubroVenta[rb])rubroVenta[rb]=0;
     rubroVenta[rb]+=r.salida;
+    if(!rubroImporte[rb])rubroImporte[rb]=0;
+    rubroImporte[rb]+=r.importe;
   });
   stockF.forEach(function(r){
     var rb=r.nombre_rubro||'—';
@@ -1147,25 +1178,48 @@ function renderProd(){
     rubroStock[rb]+=r.stock;
   });
   var allRubros={};Object.keys(rubroVenta).forEach(function(k){allRubros[k]=1;});Object.keys(rubroStock).forEach(function(k){allRubros[k]=1;});
-  var rubroList=Object.keys(allRubros).filter(function(k){return k&&k!=='—'&&k!=='';}).map(function(k){return{k:k,u:rubroVenta[k]||0,s:rubroStock[k]||0};}).sort(function(a,b){return b.u-a.u;});
+  var rubroList=Object.keys(allRubros).filter(function(k){return k&&k!=='—'&&k!=='';}).map(function(k){return{k:k,u:rubroVenta[k]||0,s:rubroStock[k]||0,i:rubroImporte[k]||0};}).sort(function(a,b){return b.u-a.u;});
   
   if(rubroList.length){
     document.getElementById('chart-rubro').style.display='block';
+    document.getElementById('chart-rubro-pesos').style.display='block';
+    
     if(!window.chartRubro) window.chartRubro=window.echarts.init(document.getElementById('chart-rubro'));
+    if(!window.chartRubroPesos) window.chartRubroPesos=window.echarts.init(document.getElementById('chart-rubro-pesos'));
+    
     var tcRubM = document.body.classList.contains('light-mode') ? '#64748b' : '#8a8680';
+    var tRubTotal = rubroList.reduce(function(a,r){return a+r.u;},0);
+    var tRubImpTotal = rubroList.reduce(function(a,r){return a+r.i;},0);
+    
     window.chartRubro.setOption({
-      tooltip:{trigger:'item',formatter:'<b>{b}</b><br/>Venta: {c} un. ({d}%)'},
+      tooltip:{ trigger:'item', formatter:function(p){ return '<b>'+p.name+'</b><br/>'+fn(p.value)+' un. ('+p.percent+'%)'; } },
+      title: { text: fn(tRubTotal)+'\nUnidades', left: 'center', top:'center', textStyle:{fontSize:12, color:tcRubM} },
       legend:{type:'scroll',orient:'horizontal',bottom:0,left:'center',textStyle:{color:tcRubM,fontSize:10},pageTextStyle:{color:tcRubM}},
       color:PALETTE,
       series:[{
-        name:'Rubro',type:'pie',radius:['35%','65%'],center:['50%','45%'],
+        name:'Rubro (Unidades)',type:'pie',radius:['40%','65%'],center:['50%','45%'],
         itemStyle:{borderColor:'#2a2a2a',borderWidth:2},
-        label:{show:false},
+        label:{show:true,formatter:'{b}\n{d}%',color:tcRubM,fontSize:10},
         data:rubroList.map(function(r){return{name:r.k,value:r.u};}).filter(function(d){return d.value>0;})
       }]
     });
+
+    window.chartRubroPesos.setOption({
+      tooltip:{ trigger:'item', formatter:function(p){ return '<b>'+p.name+'</b><br/>'+fm(p.value)+' ('+p.percent+'%)'; } },
+      title: { text: fm(tRubImpTotal)+'\nValores', left: 'center', top:'center', textStyle:{fontSize:11, color:tcRubM} },
+      legend:{type:'scroll',orient:'horizontal',bottom:0,left:'center',textStyle:{color:tcRubM,fontSize:10},pageTextStyle:{color:tcRubM}},
+      color:PALETTE,
+      series:[{
+        name:'Rubro (Pesos)',type:'pie',radius:['40%','65%'],center:['50%','45%'],
+        itemStyle:{borderColor:'#2a2a2a',borderWidth:2},
+        label:{show:true,formatter:'{b}\n{d}%',color:tcRubM,fontSize:10},
+        data:rubroList.map(function(r){return{name:r.k,value:r.i};}).filter(function(d){return d.value>0;})
+      }]
+    });
+
   } else {
     document.getElementById('chart-rubro').style.display='none';
+    document.getElementById('chart-rubro-pesos').style.display='none';
   }
 
   document.getElementById('tbl-rubro').innerHTML=buildTable(
