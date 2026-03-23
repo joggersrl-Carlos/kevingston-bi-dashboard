@@ -1097,19 +1097,31 @@ function renderProd(){
     '<div class="pkpi"><div class="pkpi-val">'+fn(tStock)+'</div><div class="pkpi-label">Stock</div></div>';
 
   var genM={};
+  var genImp={};
   var stockClas1={};stockF.forEach(function(r){if(r.cod_prod&&r.clas1)stockClas1[r.cod_prod]=r.clas1;});
   movpF.forEach(function(r){
     var g=stockClas1[r.cod_prod]||'—';
-    if(g&&g!=='—')genM[g]=(genM[g]||0)+r.salida;
+    if(g&&g!=='—'){
+      genM[g]=(genM[g]||0)+r.salida;
+      genImp[g]=(genImp[g]||0)+r.importe;
+    }
   });
   if(!Object.keys(genM).length){
-    stockF.forEach(function(r){var g=r.clas1||'—';if(g&&g!=='—')genM[g]=(genM[g]||0)+r.unidades;});
+    stockF.forEach(function(r){
+      var g=r.clas1||'—';
+      if(g&&g!=='—'){
+        genM[g]=(genM[g]||0)+r.unidades;
+        genImp[g]=(genImp[g]||0)+r.imp_venta;
+      }
+    });
   }
   var tGenTotal=Object.keys(genM).reduce(function(a,k){return a+genM[k];},0)||tVenta;
+  var tGenImpTotal=Object.keys(genImp).reduce(function(a,k){return a+genImp[k];},0)||0;
+  
   var genH='';
   var chartGenderData=[];
   Object.keys(genM).sort(function(a,b){return genM[b]-genM[a];}).forEach(function(g){
-    chartGenderData.push({name:g,value:genM[g]});
+    chartGenderData.push({name:g,value:genM[g],importe:genImp[g]||0});
   });
   
   if(chartGenderData.length){
@@ -1117,15 +1129,27 @@ function renderProd(){
     if(!window.chartGender) window.chartGender=window.echarts.init(document.getElementById('chart-gender'));
     var tcGen = document.body.classList.contains('light-mode') ? '#334155' : '#f0ede8';
     window.chartGender.setOption({
-      tooltip:{trigger:'item',formatter:'<b>{b}</b><br/>{c} un. ({d}%)'},
+      tooltip:{
+        trigger:'item',
+        formatter:function(p){
+          var u=p.data.value, i=p.data.importe;
+          var pu=tGenTotal?((u/tGenTotal)*100).toFixed(1):0;
+          var pi=tGenImpTotal?((i/tGenImpTotal)*100).toFixed(1):0;
+          return '<b>'+p.name+'</b><br/>Unidades: '+fn(u)+' ('+pu+'%)<br/>Valores: '+fm(i)+' ('+pi+'%)';
+        }
+      },
+      title: {
+        text: fn(tGenTotal) + ' u.\n' + fm(tGenImpTotal),
+        left: 'center', top: 'center',
+        textStyle: { fontSize: 13, fontWeight: 'bold', color: tcGen }
+      },
       legend:{show:false},
       color:['#c9a96e','#5a9fd4','#e07b9a','#52c48a'],
       series:[{
-        name:'Género',type:'pie',radius:['50%','75%'],avoidLabelOverlap:false,
+        name:'Género',type:'pie',radius:['55%','85%'],avoidLabelOverlap:true,
         itemStyle:{borderColor:'#2a2a2a',borderWidth:2},
-        label:{show:true,position:'center',formatter:function(){return fn(tGenTotal)+'\nUnidades';},fontSize:14,fontWeight:'bold',color:tcGen},
-        emphasis:{label:{show:true,fontSize:14,fontWeight:'bold'}},
-        labelLine:{show:false},
+        label:{show:true,position:'outside',formatter:'{b}\n{d}%',fontSize:11,fontWeight:'bold',color:tcGen},
+        labelLine:{show:true,length:5,length2:5},
         data:chartGenderData
       }]
     });
@@ -1135,11 +1159,12 @@ function renderProd(){
   document.getElementById('gender-block').innerHTML=genH;
 
   var stockRubroMap={};stockF.forEach(function(r){if(r.cod_prod&&r.nombre_rubro)stockRubroMap[r.cod_prod]=r.nombre_rubro;});
-  var rubroVenta={},rubroStock={};
+  var rubroVenta={},rubroStock={},rubroImpVenta={};
   movpF.forEach(function(r){
     var rb=stockRubroMap[r.cod_prod] || r.rubro || '—';
-    if(!rubroVenta[rb])rubroVenta[rb]=0;
+    if(!rubroVenta[rb]){rubroVenta[rb]=0;rubroImpVenta[rb]=0;}
     rubroVenta[rb]+=r.salida;
+    rubroImpVenta[rb]+=r.importe;
   });
   stockF.forEach(function(r){
     var rb=r.nombre_rubro||'—';
@@ -1147,21 +1172,32 @@ function renderProd(){
     rubroStock[rb]+=r.stock;
   });
   var allRubros={};Object.keys(rubroVenta).forEach(function(k){allRubros[k]=1;});Object.keys(rubroStock).forEach(function(k){allRubros[k]=1;});
-  var rubroList=Object.keys(allRubros).filter(function(k){return k&&k!=='—'&&k!=='';}).map(function(k){return{k:k,u:rubroVenta[k]||0,s:rubroStock[k]||0};}).sort(function(a,b){return b.u-a.u;});
+  var rubroList=Object.keys(allRubros).filter(function(k){return k&&k!=='—'&&k!=='';}).map(function(k){return{k:k,u:rubroVenta[k]||0,s:rubroStock[k]||0,i:rubroImpVenta[k]||0};}).sort(function(a,b){return b.u-a.u;});
   
   if(rubroList.length){
     document.getElementById('chart-rubro').style.display='block';
     if(!window.chartRubro) window.chartRubro=window.echarts.init(document.getElementById('chart-rubro'));
     var tcRubM = document.body.classList.contains('light-mode') ? '#64748b' : '#8a8680';
+    var tRubTotal = rubroList.reduce(function(a,r){return a+r.u;},0);
+    var tRubImpTotal = rubroList.reduce(function(a,r){return a+r.i;},0);
     window.chartRubro.setOption({
-      tooltip:{trigger:'item',formatter:'<b>{b}</b><br/>Venta: {c} un. ({d}%)'},
+      tooltip:{
+        trigger:'item',
+        formatter:function(p){
+          var u=p.data.value, i=p.data.importe;
+          var pu=tRubTotal?((u/tRubTotal)*100).toFixed(1):0;
+          var pi=tRubImpTotal?((i/tRubImpTotal)*100).toFixed(1):0;
+          return '<b>'+p.name+'</b><br/>Unidades: '+fn(u)+' ('+pu+'%)<br/>Valores: '+fm(i)+' ('+pi+'%)';
+        }
+      },
       legend:{type:'scroll',orient:'horizontal',bottom:0,left:'center',textStyle:{color:tcRubM,fontSize:10},pageTextStyle:{color:tcRubM}},
       color:PALETTE,
       series:[{
-        name:'Rubro',type:'pie',radius:['35%','65%'],center:['50%','45%'],
+        name:'Rubro',type:'pie',radius:['40%','70%'],center:['50%','45%'],
         itemStyle:{borderColor:'#2a2a2a',borderWidth:2},
-        label:{show:false},
-        data:rubroList.map(function(r){return{name:r.k,value:r.u};}).filter(function(d){return d.value>0;})
+        label:{show:true,formatter:'{b}\n{d}%',color:tcRubM,fontSize:10},
+        labelLine:{show:true,length:5,length2:5},
+        data:rubroList.map(function(r){return{name:r.k,value:r.u,importe:r.i};}).filter(function(d){return d.value>0;})
       }]
     });
   } else {
