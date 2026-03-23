@@ -7,9 +7,7 @@ import { renderResumen } from './views/resumen.js';
 import { handleSort } from './components/tables.js';
 import { exportCSV, showToast } from './utils.js';
 import { loadAllData, saveAllData, clearLocalData, syncToSupabase } from './storage.js';
-import * as stateScope from './state.js';
 
-window._globalState = stateScope;
 
 window.setQuickDate = function(tipo) {
     if(!window.doRender) return;
@@ -75,8 +73,8 @@ window.generateAlerts = function() {
         alerts.push('<div style="background:var(--bg3); padding:8px; border-radius:6px; border-left:3px solid '+(type==='error'?'var(--red)':'var(--gold)')+'; display:flex; gap:6px; align-items:flex-start; line-height:1.3;"><span>'+icon+'</span><span style="flex:1;">'+msg+'</span></div>');
     };
 
-    var movp = window._globalState ? window._globalState.fMovp() : [];
-    var stock = window._globalState ? window._globalState.fStock() : [];
+    var movp = fMovp();
+    var stock = fStock();
     
     // Alerta 1: Quiebres de Stock Críticos (Ventas >= 3 y Stock <= 0)
     var pVenta = {};
