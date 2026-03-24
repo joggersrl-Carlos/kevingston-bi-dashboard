@@ -72,7 +72,7 @@ export function renderProd(){
   var stockClas1={};stockF.forEach(function(r){if(r.cod_prod&&r.clas1)stockClas1[r.cod_prod]=r.clas1;});
   movpF.forEach(function(r){
     var g=stockClas1[r.cod_prod]||'—';
-    if(g.toUpperCase()==='NIDO') g='TEENS';
+    if(g.toUpperCase().indexOf('NIDO')!==-1) g='TEENS';
     if(g&&g!=='—'){
       genM[g]=(genM[g]||0)+r.salida;
       genImpM[g]=(genImpM[g]||0)+r.importe;
@@ -81,7 +81,7 @@ export function renderProd(){
   if(!Object.keys(genM).length){
     stockF.forEach(function(r){
       var g=r.clas1||'—';
-      if(g.toUpperCase()==='NIDO') g='TEENS';
+      if(g.toUpperCase().indexOf('NIDO')!==-1) g='TEENS';
       if(g&&g!=='—') {
         genM[g]=(genM[g]||0)+r.unidades;
         genImpM[g]=(genImpM[g]||0)+r.imp_venta;

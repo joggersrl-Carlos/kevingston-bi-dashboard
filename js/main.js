@@ -357,9 +357,9 @@ function initEvents() {
     const opt = {
       margin: 10,
       filename: 'Reporte_KVN_'+(new Date().toISOString().split('T')[0])+'.pdf',
-      pagebreak: { mode: 'css', avoid: ['.tcrd', '.tcrd-full', '.kpi-row', '.pdf-avoid-break', '.dow-card'] },
+      pagebreak: { mode: ['css', 'legacy'], avoid: 'div.tcrd, div.tcrd-full, div.kpi-row, div.pdf-avoid-break, div.dow-card' },
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0f172a', windowWidth: 1600 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0f172a' },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
     };
     html2pdf().set(opt).from(p).save();
