@@ -56,7 +56,11 @@
     </select>
     <span class="fl">Sucursal</span>
     <select id="fCaja"><option value="">Todas</option></select>
-    <button id="btnExportPDF" onclick="window.exportGlobalPDF&&window.exportGlobalPDF()" style="background:linear-gradient(135deg,var(--blue),var(--gold));color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;margin-left:8px;box-shadow:0 2px 8px rgba(56,189,248,0.3);font-family:'Outfit';transition:0.2s" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">📥 Exportar PDF</button>
+    <div class="export-group" style="display:flex;gap:4px;margin-left:8px;">
+      <button id="btnExportResu" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border:none;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(59,130,246,0.3);font-family:'Outfit';transition:0.2s" title="Exportar Resumen y KPIs">📊 Resumen</button>
+      <button id="btnExportCharts" style="background:linear-gradient(135deg,#c9a96e,#a68a52);color:#fff;border:none;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(201,169,110,0.3);font-family:'Outfit';transition:0.2s" title="Exportar Gráficos de esta página">📈 Gráficos</button>
+      <button id="btnExportTables" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(16,185,129,0.3);font-family:'Outfit';transition:0.2s" title="Exportar Tablas de datos">📋 Tablas</button>
+    </div>
   </div>
 </div>
 

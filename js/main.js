@@ -350,20 +350,56 @@ function initEvents() {
     });
   }
 
-  const btnExport = document.getElementById('btnExportPDF');
-  if(btnExport) btnExport.addEventListener('click', () => {
-    const p = document.querySelector('.page.active');
-    if(!p) return;
-    const opt = {
-      margin: 10,
-      filename: 'Reporte_KVN_'+(new Date().toISOString().split('T')[0])+'.pdf',
-      pagebreak: { mode: ['css', 'legacy'], avoid: 'div.tcrd, div.tcrd-full, div.kpi-row, div.pdf-avoid-break, div.dow-card' },
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0f172a' },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    };
-    html2pdf().set(opt).from(p).save();
+  const setupPdfExport = (id, type) => {
+    const btn = document.getElementById(id);
+    if(btn) btn.addEventListener('click', () => exportPageSection(type));
+  };
+  setupPdfExport('btnExportResu', 'resu');
+  setupPdfExport('btnExportCharts', 'charts');
+  setupPdfExport('btnExportTables', 'tables');
+}
+
+function exportPageSection(type) {
+  const p = document.querySelector('.page.active');
+  if(!p) return;
+  
+  // Clonar la página para no afectar la UI real
+  const clone = p.cloneNode(true);
+  clone.style.width = (type === 'charts') ? '1400px' : 'auto';
+  clone.style.padding = '20px';
+  clone.style.background = '#0f172a';
+  
+  // Definir que ocultar según el tipo
+  const selectors = {
+    resu: ['.chart-container', 'div[id^="chart-"]', '.tgrid', '.tgrid2', '.tgrid3', '.prod-main-grid', '.vend-grid', '.dow-card', '.alert-bell'],
+    charts: ['.kpi-row', '.tgrid', '.tgrid2', '.tgrid3', '.prod-main-grid', '.vend-grid', '.alert-bell', '.filters'],
+    tables: ['.kpi-row', '.chart-container', 'div[id^="chart-"]', '.gender-block', '.prod-kpi-strip', '.alert-bell']
+  };
+
+  (selectors[type] || []).forEach(sel => {
+    clone.querySelectorAll(sel).forEach(el => el.remove());
   });
+
+  // Asegurar que lo que queda sea visible (por si tiene display:none en el original)
+  clone.querySelectorAll('div').forEach(d => {
+    if(d.id && d.id.indexOf('chart-') === 0 && type === 'charts') d.style.display = 'block';
+  });
+
+  const opt = {
+    margin: 10,
+    filename: `Reporte_${type.toUpperCase()}_KVN_${new Date().toISOString().split('T')[0]}.pdf`,
+    pagebreak: { mode: ['css', 'legacy'], avoid: '.tcrd, .tcrd-full, .kpi-row, .pdf-avoid-break, .dow-card, .tgrid2, .tgrid3' },
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 2, 
+      useCORS: true, 
+      backgroundColor: '#0f172a',
+      windowWidth: (type === 'charts' ? 1400 : 1200)
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: (type === 'tables' ? 'portrait' : 'landscape') }
+  };
+
+  window.html2pdf().set(opt).from(clone).save();
 }
 
 window.addEventListener('resize', function() {
