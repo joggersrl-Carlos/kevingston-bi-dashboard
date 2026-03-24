@@ -95,7 +95,6 @@ const SUPABASE_URL = 'https://sooutfkhgoofczdrjqis.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_JKRgvgMKXSRKEw05wC2uNA_SD30xl0V';
 
 const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-window.supabaseClient = supabase;
 
 if (!supabase) {
     console.error('[KBI] Supabase SDK not found. Make sure to include it in index.html');
@@ -281,13 +280,8 @@ const COLS = {
   kvn_caja: ['id', 'sucursal', 'fecha', 'anio', 'mes', 'dia', 'ventas', 'gastos', 'tarjetas', 'efectivo']
 };
 
-const getSupabase = () => {
-  return importedSupabase || window.supabaseClient;
-};
-
 // Helper: fetch ALL rows from a table (Supabase default limit is 1000)
 async function fetchAll(table, orderCol) {
-  const supabase = getSupabase();
   if (!supabase) return [];
   const pageSize = 1000;
   let allData = [];
@@ -375,7 +369,7 @@ async function syncRows(table, rows, keyFn) {
   const batchSize = 500;
   for (let i = 0; i < rows.length; i += batchSize) {
     const chunk = rows.slice(i, i + batchSize).map(r => prepareForSupabase(r, keyFn, table));
-    const { error } = await getSupabase().from(table).upsert(chunk);
+    const { error } = await supabase.from(table).upsert(chunk);
     if (error) {
       console.error('[KBI] Error en upsert de', table, '(batch', i, '):', error);
       throw error;
@@ -384,7 +378,6 @@ async function syncRows(table, rows, keyFn) {
 }
 
 async function syncToSupabase() {
-  const supabase = getSupabase();
   if (!supabase) return;
   updateCloudUI('syncing');
   try {
@@ -429,7 +422,6 @@ async function syncToSupabase() {
 async function loadAllData() {
   updateCloudUI('syncing');
   let supabaseSuccess = false;
-  const supabase = getSupabase();
 
   if (supabase) {
     try {

@@ -1,5 +1,5 @@
 import { DB, LOADED, setLoaded, SUCURSALES, setSucursales, clearDB, addDBRecord } from './state.js';
-import { supabase as importedSupabase } from './supabase.js';
+import { supabase } from './supabase.js';
 
 const COLS = {
   kvn_sucursales: ['name'],
@@ -10,13 +10,8 @@ const COLS = {
   kvn_caja: ['id', 'sucursal', 'fecha', 'anio', 'mes', 'dia', 'ventas', 'gastos', 'tarjetas', 'efectivo']
 };
 
-const getSupabase = () => {
-  return importedSupabase || window.supabaseClient;
-};
-
 // Helper: fetch ALL rows from a table (Supabase default limit is 1000)
 async function fetchAll(table, orderCol) {
-  const supabase = getSupabase();
   if (!supabase) return [];
   const pageSize = 1000;
   let allData = [];
@@ -104,7 +99,7 @@ async function syncRows(table, rows, keyFn) {
   const batchSize = 500;
   for (let i = 0; i < rows.length; i += batchSize) {
     const chunk = rows.slice(i, i + batchSize).map(r => prepareForSupabase(r, keyFn, table));
-    const { error } = await getSupabase().from(table).upsert(chunk);
+    const { error } = await supabase.from(table).upsert(chunk);
     if (error) {
       console.error('[KBI] Error en upsert de', table, '(batch', i, '):', error);
       throw error;
@@ -113,7 +108,6 @@ async function syncRows(table, rows, keyFn) {
 }
 
 export async function syncToSupabase() {
-  const supabase = getSupabase();
   if (!supabase) return;
   updateCloudUI('syncing');
   try {
@@ -158,7 +152,6 @@ export async function syncToSupabase() {
 export async function loadAllData() {
   updateCloudUI('syncing');
   let supabaseSuccess = false;
-  const supabase = getSupabase();
 
   if (supabase) {
     try {
