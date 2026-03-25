@@ -210,7 +210,7 @@ function buildFilters(){
   if(sA) {
     sA.innerHTML='<option value="0">Todos</option>';
     years.forEach(function(y){var o=document.createElement('option');o.value=String(y);o.textContent=String(y);sA.appendChild(o);});
-    if(pA&&pA!=='0'&&ys[parseInt(pA)])sA.value=pA;else if(years.length)sA.value=String(years[0]);
+    if(pA&&pA!=='0'&&ys[parseInt(pA)])sA.value=pA; // keep previous selection, but default to 'Todos'
   }
   var sC=document.getElementById('fCaja'),pC=sC.value;
   if(sC) {
