@@ -4,7 +4,7 @@ import { supabase } from './supabase.js';
 const COLS = {
   kvn_sucursales: ['name'],
   kvn_loaded: ['id', 'suc', 'type', 'typename', 'files', 'n'],
-  kvn_comp: ['id', 'sucursal', 'fecha', 'anio', 'mes', 'dia', 'dow', 'nro', 'prefijo', 'letra', 'tipo_comp', 'cliente', 'importe', 'tipo_pago', 'vend_raw', 'vend_cod', 'vend_nombre', 'secuencia'],
+  kvn_comp: ['id', 'sucursal', 'fecha', 'anio', 'mes', 'dia', 'dow', 'hora', 'nro', 'prefijo', 'letra', 'tipo_comp', 'cliente', 'importe', 'tipo_pago', 'vend_raw', 'vend_cod', 'vend_nombre', 'secuencia'],
   kvn_movp: ['id', 'sucursal', 'fecha', 'anio', 'mes', 'dia', 'dow', 'cod_prod', 'nro_comp', 'desc_prod', 'salida', 'entrada', 'importe', 'vend_raw', 'vend_cod', 'vend_nombre', 'rubro', 'subrubro', 'talle', 'color', 'tipo_comp', 'concepto'],
   kvn_stock: ['id', 'sucursal', 'nombre_rubro', 'nombre_subrubro', 'cod_rubro', 'unidades', 'imp_costo', 'imp_venta', 'stock', 'cod_prod', 'nombre_prod', 'talle', 'color', 'clas1', 'clas2'],
   kvn_caja: ['id', 'sucursal', 'fecha', 'anio', 'mes', 'dia', 'ventas', 'gastos', 'tarjetas', 'efectivo']
