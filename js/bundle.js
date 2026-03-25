@@ -869,7 +869,7 @@ function renderFact(){
   );
   if(hlIdx!==undefined){var trs=document.getElementById('tbl-suc').querySelectorAll('tbody tr');if(trs[hlIdx])trs[hlIdx].className='hl';}
   var DN=['dom','lun','mar','mié','jue','vie','sáb'],dM={};
-  tkts.forEach(function(r){var k=r.anio+'-'+r.mes+'-'+r.dia;if(!dM[k])dM[k]={anio:r.anio,mes:r.mes,dia:r.dia,dow:r.fecha?DN[r.fecha.getDay()]:'',imp:0,tkt:0};dM[k].imp+=r.importe;dM[k].tkt++;});
+  tkts.forEach(function(r){var k=r.anio+'-'+r.mes+'-'+r.dia;if(!dM[k]){var fd2=r.fecha instanceof Date?r.fecha:pDate(r.fecha);dM[k]={anio:r.anio,mes:r.mes,dia:r.dia,dow:fd2?DN[fd2.getDay()]:'',imp:0,tkt:0};}dM[k].imp+=r.importe;dM[k].tkt++;});
   var uD={};movp.forEach(function(r){var k=r.anio+'-'+r.mes+'-'+r.dia;uD[k]=(uD[k]||0)+r.salida;});
   var dK=Object.keys(dM).sort(function(a,b){var pa=a.split('-'),pb=b.split('-');return(+pa[0]-+pb[0])||(+pa[1]-+pb[1])||(+pa[2]-+pb[2]);});
   
