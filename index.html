@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Kevingston BI Dashboard</title>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kevingston BI Dashboard — Análisis de Ventas</title>
+<meta name="description" content="Dashboard de Business Intelligence para Kevingston. Analisá facturación, vendedores, productos y stock en tiempo real.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -69,6 +71,8 @@
   <div class="ntab" id="tab-fact">Facturación Diaria</div>
   <div class="ntab" id="tab-vend">Análisis por Vendedor</div>
   <div class="ntab" id="tab-prod">Reporte de Producto</div>
+  <div class="ntab" id="tab-ins">💡 Insights</div>
+  <div class="ntab" id="tab-caja">💰 Control de Caja</div>
 </div>
 
 <div class="config-bar">
@@ -127,7 +131,7 @@
 <div class="page active" id="page-resu">
   <div class="kpi-row" id="kpi-resu"></div>
   <div class="tgrid2">
-    <div class="tcrd"><div class="thdbar">Top 5 Vendedores del Mes</div><div class="tscroll" id="tbl-resu-vend"></div></div>
+    <div class="tcrd"><div class="thdbar">🏆 Podio de Vendedores</div><div id="tbl-resu-vend"></div></div>
     <div class="tcrd"><div class="thdbar">Top 5 Rubros del Mes</div><div class="tscroll" id="tbl-resu-rubro"></div></div>
   </div>
   <div class="tcrd-full" style="margin-top:14px;"><div class="thdbar">Tendencia de Ventas (Últimos 7 días)</div>
@@ -166,6 +170,10 @@
 
 <div class="page" id="page-vend">
   <div class="kpi-row" id="kpi-vend"></div>
+  <div class="tcrd-full" style="padding-bottom:12px;margin-bottom:14px;">
+    <div class="thdbar">Ranking de Vendedores — Facturación</div>
+    <div id="chart-vend" style="width:100%;height:320px;display:none;"></div>
+  </div>
   <div class="tcrd-full"><div class="thdbar"><span class="thdbar-title">Venta por Vendedor</span><button class="csv-btn" onclick="exportCSV('tbl-vendedor','venta_vendedor')">⬇ CSV</button></div><div id="tbl-vendedor"></div></div>
 </div>
 
@@ -212,10 +220,48 @@
   <div class="annual-wrap"><div class="thdbar">Venta de Unidades Anual</div><div class="annual-scroll" id="tbl-annual"></div></div>
 </div>
 
+<!-- ========== PÁGINA INSIGHTS EJECUTIVOS ========== -->
+<div class="page" id="page-ins">
+  <div class="kpi-row" id="kpi-ins"></div>
+  <div class="tgrid2" style="margin-top:0;">
+    <div class="tcrd" style="padding-bottom:12px;">
+      <div class="thdbar">Distribución de Ingresos por Sucursal</div>
+      <div id="chart-ins-dist" style="width:100%;height:280px;"></div>
+    </div>
+    <div class="tcrd" style="padding-bottom:12px;">
+      <div class="thdbar">Ticket Promedio por Sucursal</div>
+      <div id="chart-ins-avg" style="width:100%;height:280px;"></div>
+    </div>
+  </div>
+  <div class="tcrd-full" style="margin-top:0;">
+    <div class="thdbar">💡 Análisis Ejecutivo Automático</div>
+    <div id="ins-text" style="padding:16px;"></div>
+  </div>
+</div>
+
+<!-- ========== PÁGINA CONTROL DE CAJA ========== -->
+<div class="page" id="page-caja">
+  <div class="kpi-row" id="kpi-caja"></div>
+  <div class="tgrid2" style="margin-top:0;">
+    <div class="tcrd" style="padding-bottom:12px;">
+      <div class="thdbar">Ventas vs Gastos Consolidados</div>
+      <div id="chart-caja-comp" style="width:100%;height:280px;"></div>
+    </div>
+    <div class="tcrd" style="padding-bottom:12px;">
+      <div class="thdbar">Composición de Cobros (Medios de Pago)</div>
+      <div id="chart-caja-mix" style="width:100%;height:280px;"></div>
+    </div>
+  </div>
+  <div class="tcrd-full" style="margin-top:0;">
+    <div class="thdbar">Auditoría Diaria de Caja</div>
+    <div class="tscroll" id="tbl-caja"></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/bundle.js?v=20260324-1933"></script>
+<script type="module" src="js/main.js?v=20260710"></script>
 </body></html>

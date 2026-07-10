@@ -33,23 +33,30 @@ export function getC(){return document.getElementById('fCaja').value;}
 export function getDesde(){return document.getElementById('fDesde').value;}
 export function getHasta(){return document.getElementById('fHasta').value;}
 function checkRange(r, a, m, c, d, h) {
-  if((a&&r.anio!==a)||(m&&r.mes!==m)||(c&&r.sucursal!==c)) return false;
+  // FIX: Supabase devuelve anio/mes como strings — coercionar a int para comparar
+  var rAnio = parseInt(r.anio) || 0;
+  var rMes  = parseInt(r.mes)  || 0;
+  if((a && rAnio !== a) || (m && rMes !== m) || (c && r.sucursal !== c)) return false;
   if(d || h) {
-    var rStr = r.anio + '-' + (r.mes<10?'0'+r.mes:r.mes) + '-' + (r.dia<10?'0'+r.dia:r.dia);
+    var rMesPad = rMes < 10 ? '0' + rMes : rMes;
+    var rDia = parseInt(r.dia) || 0;
+    var rDiaPad = rDia < 10 ? '0' + rDia : rDia;
+    var rStr = rAnio + '-' + rMesPad + '-' + rDiaPad;
     if(d && rStr < d) return false;
     if(h && rStr > h) return false;
   }
   return true;
 }
 
-function normalizeNro(nro) {
+
+export function normalizeNro(nro) {
   if (!nro) return '';
   var s = String(nro).replace(/[^0-9\-]/g, '');
   s = s.replace(/-+/g, '-').replace(/^-|-$/g, '');
   if (!s) return '';
   return s.split('-').map(p => p.replace(/^0+/, '') || '0').join('-');
 }
-function getValidComps() {
+export function getValidComps() {
   if(!DB.comp.length) return null;
   var valid = new Set();
   for(let i=0; i<DB.comp.length; i++) {
@@ -72,8 +79,10 @@ export function fMovp(){
   return DB.movp.filter(function(r){
     if(!checkRange(r,a,m,c,d,h)) return false;
     if(!valid) return true;
-    if(!r.nro_comp) return false;
-    var norm_movp = normalizeNro(r.nro_comp); if(!norm_movp) return false; return valid.has(norm_movp);
+    if(!r.nro_comp) return true; // Relaxation: show orphan movements
+    var norm_movp = normalizeNro(r.nro_comp);
+    if(!norm_movp) return true;
+    return valid.has(norm_movp);
   });
 }
 export function fStock(){var c=getC();return DB.stock.filter(function(r){return!c||r.sucursal===c;});}
@@ -82,8 +91,10 @@ export function fMovpBySuc(){
   return DB.movp.filter(function(r){
     if(!checkRange(r,0,0,c,d,h)) return false;
     if(!valid) return true;
-    if(!r.nro_comp) return false;
-    var norm_movp = normalizeNro(r.nro_comp); if(!norm_movp) return false; return valid.has(norm_movp);
+    if(!r.nro_comp) return true;
+    var norm_movp = normalizeNro(r.nro_comp);
+    if(!norm_movp) return true;
+    return valid.has(norm_movp);
   });
 }
 

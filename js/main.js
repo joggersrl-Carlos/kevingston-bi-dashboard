@@ -4,6 +4,8 @@ import { renderFact } from './views/facturacion.js';
 import { renderProd, filterProductos, filterProductosPesos } from './views/producto.js';
 import { renderVend } from './views/vendedor.js';
 import { renderResumen } from './views/resumen.js';
+import { renderInsights } from './views/insights.js';
+import { renderCaja } from './views/caja.js';
 import { handleSort } from './components/tables.js';
 import { exportCSV, showToast } from './utils.js';
 import { loadAllData, saveAllData, clearLocalData, syncToSupabase } from './storage.js';
@@ -32,7 +34,10 @@ window.setQuickDate = function(tipo) {
 
 window.exportGlobalPDF = function() {
     var activePage = document.querySelector('.page.active');
-    if(!activePage || !window.html2pdf) return;
+    if(!activePage || !window.html2pdf) {
+        if(window.showToast) window.showToast('❌ html2pdf no está disponible', 'error', 3000);
+        return;
+    }
 
     var isDark = !document.body.classList.contains('light-mode');
     var bColor = isDark ? '#0f172a' : '#f8fafc';
@@ -44,19 +49,13 @@ window.exportGlobalPDF = function() {
       html2canvas:  { scale: 2, useCORS: true, logging: false, backgroundColor: bColor },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
     };
-    
-    var btn = document.getElementById('btnExportPDF');
-    var oldTxt = btn.innerHTML;
-    btn.innerHTML = '⏳ Generando...';
-    btn.style.opacity = '0.7';
-    
+
+    if(window.showToast) window.showToast('⏳ Generando PDF...', 'info', 4000);
     window.html2pdf().set(opt).from(activePage).save().then(function(){
-       btn.innerHTML = oldTxt;
-       btn.style.opacity = '1';
+       if(window.showToast) window.showToast('✅ PDF generado exitosamente', 'success', 3000);
     }).catch(function(e){
        console.error(e);
-       btn.innerHTML = oldTxt;
-       btn.style.opacity = '1';
+       if(window.showToast) window.showToast('❌ Error generando PDF', 'error', 3000);
     });
 };
 
@@ -70,7 +69,8 @@ window.generateAlerts = function() {
     var alerts = [];
     var addA = (msg, type) => {
         var icon = type==='error'?'🔴':type==='warning'?'🟡':'🔵';
-        alerts.push('<div style="background:var(--bg3); padding:8px; border-radius:6px; border-left:3px solid '+(type==='error'?'var(--red)':'var(--gold)')+'; display:flex; gap:6px; align-items:flex-start; line-height:1.3;"><span>'+icon+'</span><span style="flex:1;">'+msg+'</span></div>');
+        var borderColor = type==='error' ? 'var(--red)' : type==='warning' ? '#e8c98a' : 'var(--blue)';
+        alerts.push(`<div style="background:var(--bg3); padding:8px; border-radius:6px; border-left:3px solid ${borderColor}; display:flex; gap:6px; align-items:flex-start; line-height:1.3;"><span>${icon}</span><span style="flex:1;">${msg}</span></div>`);
     };
 
     var movp = fMovp();
@@ -78,18 +78,37 @@ window.generateAlerts = function() {
     
     // Alerta 1: Quiebres de Stock Críticos (Ventas >= 3 y Stock <= 0)
     var pVenta = {};
-    movp.forEach(r => { pVenta[r.nombre_prod||r.cod_prod] = (pVenta[r.nombre_prod||r.cod_prod]||0) + r.salida; });
+    var pNombre = {};
+    movp.forEach(r => {
+        var key = r.nombre_prod || r.cod_prod;
+        pVenta[key] = (pVenta[key]||0) + r.salida;
+        if (!pNombre[key]) pNombre[key] = r.nombre_prod || r.cod_prod;
+    });
     var pStock = {};
-    stock.forEach(r => { pStock[r.nombre_prod||r.cod_prod] = (pStock[r.nombre_prod||r.cod_prod]||0) + r.stock; });
+    stock.forEach(r => {
+        var key = r.nombre_prod || r.cod_prod;
+        pStock[key] = (pStock[key]||0) + r.stock;
+    });
 
     var brk = 0;
     Object.keys(pVenta).forEach(p => {
         if(pVenta[p] >= 3 && (!pStock[p] || pStock[p] <= 0)) {
-            if(brk < 6) addA(`<b>Quiebre de Stock:</b> "${p}" vendió ${pVenta[p]} un. pero el stock general reporta 0.`, 'error');
+            if(brk < 5) addA(`<b>Sin Stock:</b> "${pNombre[p]||p}" vendió ${Math.round(pVenta[p])} un. y tiene stock 0.`, 'error');
             brk++;
         }
     });
-    if (brk > 6) addA(`Y otros ${brk - 6} productos sin stock con alta rotación.`, 'warning');
+    if (brk > 5) addA(`Y otros ${brk - 5} productos sin stock con alta rotación.`, 'warning');
+
+    // Alerta 2: Stock Bajo (Stock <= 5 pero > 0 con ventas recientes >= 2)
+    var lowStock = 0;
+    Object.keys(pVenta).forEach(p => {
+        var stk = pStock[p];
+        if(pVenta[p] >= 2 && stk > 0 && stk <= 5) {
+            if(lowStock < 3) addA(`<b>Stock Bajo:</b> "${pNombre[p]||p}" tiene solo ${stk} unidad${stk!==1?'es':''} y vendió ${Math.round(pVenta[p])} recientemente.`, 'warning');
+            lowStock++;
+        }
+    });
+    if (lowStock > 3) addA(`Y otros ${lowStock - 3} productos con stock bajo y buena rotación.`, 'warning');
 
     var badge = document.getElementById('alertBadge');
     var list = document.getElementById('alertList');
@@ -112,6 +131,8 @@ export function doRender(){
   else if(curPage==='vend')renderVend();
   else if(curPage==='prod')renderProd();
   else if(curPage==='resu')renderResumen();
+  else if(curPage==='ins')renderInsights();
+  else if(curPage==='caja')renderCaja();
 }
 window.doRender = doRender;
 
@@ -210,7 +231,7 @@ function buildFilters(){
   if(sA) {
     sA.innerHTML='<option value="0">Todos</option>';
     years.forEach(function(y){var o=document.createElement('option');o.value=String(y);o.textContent=String(y);sA.appendChild(o);});
-    if(pA&&pA!=='0'&&ys[parseInt(pA)])sA.value=pA; // keep previous selection, but default to 'Todos'
+    if(pA&&pA!=='0'&&ys[parseInt(pA)])sA.value=pA;else if(years.length)sA.value=String(years[0]);
   }
   var sC=document.getElementById('fCaja'),pC=sC.value;
   if(sC) {
@@ -227,7 +248,7 @@ window.showPage = function(name, tab) {
   if (pageEl) pageEl.classList.add('active');
   if (tab) tab.classList.add('active');
   setCurPage(name);
-  const titles = { fact: 'Facturación Diaria', vend: 'Análisis por Vendedor', prod: 'Reporte de Producto', resu: 'Resumen General' };
+  const titles = { fact: 'Facturación Diaria', vend: 'Análisis por Vendedor', prod: 'Reporte de Producto', resu: 'Resumen General', ins: '💡 Insights Ejecutivos', caja: '💰 Control de Caja' };
   const titleEl = document.getElementById('pageTitle');
   if (titleEl) titleEl.textContent = titles[name] || 'Dashboard';
   doRender();
@@ -296,6 +317,12 @@ function initEvents() {
   const navTabProd = document.getElementById('tab-prod');
   if(navTabProd) navTabProd.addEventListener('click', () => window.showPage('prod', navTabProd));
 
+  const navTabIns = document.getElementById('tab-ins');
+  if(navTabIns) navTabIns.addEventListener('click', () => window.showPage('ins', navTabIns));
+
+  const navTabCaja = document.getElementById('tab-caja');
+  if(navTabCaja) navTabCaja.addEventListener('click', () => window.showPage('caja', navTabCaja));
+
   const navTabResu = document.getElementById('tab-resu');
   if(navTabResu) navTabResu.addEventListener('click', () => window.showPage('resu', navTabResu));
 
@@ -344,6 +371,13 @@ function initEvents() {
   if(fHasta) {
     fHasta.addEventListener('change', () => {
       var a = document.getElementById('fAnio'), m = document.getElementById('fMes');
+      var desde = document.getElementById('fDesde').value;
+      // Fix #8: Validar que Hasta >= Desde
+      if (desde && fHasta.value && fHasta.value < desde) {
+        showToast('⚠️ La fecha "Hasta" no puede ser anterior a "Desde"', 'error', 3000);
+        fHasta.value = '';
+        return;
+      }
       if(a) a.value = '0';
       if(m) m.value = '0';
       doRender();
@@ -403,12 +437,20 @@ function exportPageSection(type) {
 }
 
 window.addEventListener('resize', function() {
-  if (window.chartDiaria) window.chartDiaria.resize();
-  if (window.chartGender) window.chartGender.resize();
-  if (window.chartRubro) window.chartRubro.resize();
-  if (window.chartYOY) window.chartYOY.resize();
-  if (window.chartResu) window.chartResu.resize();
-  if (window.chartHora) window.chartHora.resize();
+  if (window.chartDiaria)      window.chartDiaria.resize();
+  if (window.chartGender)      window.chartGender.resize();
+  if (window.chartGenderPct)   window.chartGenderPct.resize();
+  if (window.chartGenderPesos) window.chartGenderPesos.resize();
+  if (window.chartRubro)       window.chartRubro.resize();
+  if (window.chartRubroPesos)  window.chartRubroPesos.resize();
+  if (window.chartYOY)         window.chartYOY.resize();
+  if (window.chartResu)        window.chartResu.resize();
+  if (window.chartHora)        window.chartHora.resize();
+  if (window.chartVend)        window.chartVend.resize();
+  if (window.chartInsDist)     window.chartInsDist.resize();
+  if (window.chartInsAvg)      window.chartInsAvg.resize();
+  if (window.chartCajaComp)    window.chartCajaComp.resize();
+  if (window.chartCajaMix)     window.chartCajaMix.resize();
 });
 
 showToast('☁️ Sincronizando datos automáticamente...', 'info', 3000);
@@ -538,11 +580,16 @@ window.toggleTheme = function() {
   isLightMode = document.body.classList.contains('light-mode');
   localStorage.setItem(THEME_KEY, isLightMode ? 'light' : 'dark');
   updateThemeIcon();
-  if (window.chartResu) { window.chartResu.dispose(); window.chartResu = null; }
-  if (window.chartDiaria) { window.chartDiaria.dispose(); window.chartDiaria = null; }
-  if (window.chartRubro) { window.chartRubro.dispose(); window.chartRubro = null; }
-  if (window.chartGender) { window.chartGender.dispose(); window.chartGender = null; }
-  if (window.chartYOY) { window.chartYOY.dispose(); window.chartYOY = null; }
+  // Destruir TODOS los gráficos para que se recreen con el nuevo tema
+  const chartKeys = [
+    'chartResu','chartDiaria','chartRubro','chartRubroPesos',
+    'chartGender','chartGenderPct','chartGenderPesos',
+    'chartYOY','chartHora','chartVend','chartInsDist','chartInsAvg',
+    'chartCajaComp','chartCajaMix'
+  ];
+  chartKeys.forEach(k => {
+    if (window[k]) { window[k].dispose(); window[k] = null; }
+  });
   if(window.doRender) window.doRender();
 };
 

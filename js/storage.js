@@ -5,7 +5,7 @@ const COLS = {
   kvn_sucursales: ['name'],
   kvn_loaded: ['id', 'suc', 'type', 'typename', 'files', 'n'],
   kvn_comp: ['id', 'sucursal', 'fecha', 'anio', 'mes', 'dia', 'dow', 'hora', 'nro', 'prefijo', 'letra', 'tipo_comp', 'cliente', 'importe', 'tipo_pago', 'vend_raw', 'vend_cod', 'vend_nombre', 'secuencia'],
-  kvn_movp: ['id', 'sucursal', 'fecha', 'anio', 'mes', 'dia', 'dow', 'cod_prod', 'nro_comp', 'desc_prod', 'salida', 'entrada', 'importe', 'vend_raw', 'vend_cod', 'vend_nombre', 'rubro', 'subrubro', 'talle', 'color', 'tipo_comp', 'concepto'],
+  kvn_movp: ['id', 'sucursal', 'fecha', 'anio', 'mes', 'dia', 'dow', 'cod_prod', 'nombre_prod', 'nro_comp', 'desc_prod', 'salida', 'entrada', 'importe', 'vend_raw', 'vend_cod', 'vend_nombre', 'rubro', 'subrubro', 'talle', 'color', 'tipo_comp', 'concepto'],
   kvn_stock: ['id', 'sucursal', 'nombre_rubro', 'nombre_subrubro', 'cod_rubro', 'unidades', 'imp_costo', 'imp_venta', 'stock', 'cod_prod', 'nombre_prod', 'talle', 'color', 'clas1', 'clas2'],
   kvn_caja: ['id', 'sucursal', 'fecha', 'anio', 'mes', 'dia', 'ventas', 'gastos', 'tarjetas', 'efectivo']
 };
@@ -176,10 +176,46 @@ export async function loadAllData() {
 
         clearDB('comp', true); clearDB('movp', true); clearDB('stock', true); clearDB('caja', true);
 
-        resComp.forEach(r => addDBRecord('comp', r.id, r));
-        resMovp.forEach(r => addDBRecord('movp', r.id, r));
-        resStock.forEach(r => addDBRecord('stock', r.id, r));
-        resCaja.forEach(r => addDBRecord('caja', r.id, r));
+        // FIX: Normalizar tipos numéricos — Supabase puede devolver números como strings
+        const pI = v => parseFloat(v) || 0;
+        const pN = v => parseInt(v) || 0;
+
+        resComp.forEach(r => {
+          r.anio    = pN(r.anio);
+          r.mes     = pN(r.mes);
+          r.dia     = pN(r.dia);
+          r.dow     = pN(r.dow);
+          r.hora    = r.hora != null ? pN(r.hora) : null;
+          r.importe = pI(r.importe);
+          addDBRecord('comp', r.id, r);
+        });
+        resMovp.forEach(r => {
+          r.anio    = pN(r.anio);
+          r.mes     = pN(r.mes);
+          r.dia     = pN(r.dia);
+          r.dow     = r.dow != null ? pN(r.dow) : null;
+          r.salida  = pI(r.salida);
+          r.entrada = pI(r.entrada);
+          r.importe = pI(r.importe);
+          addDBRecord('movp', r.id, r);
+        });
+        resStock.forEach(r => {
+          r.stock     = pI(r.stock);
+          r.unidades  = pI(r.unidades);
+          r.imp_costo = pI(r.imp_costo);
+          r.imp_venta = pI(r.imp_venta);
+          addDBRecord('stock', r.id, r);
+        });
+        resCaja.forEach(r => {
+          r.anio    = pN(r.anio);
+          r.mes     = pN(r.mes);
+          r.dia     = pN(r.dia);
+          r.ventas  = pI(r.ventas);
+          r.gastos  = pI(r.gastos);
+          r.tarjetas= pI(r.tarjetas);
+          r.efectivo= pI(r.efectivo);
+          addDBRecord('caja', r.id, r);
+        });
 
         console.log('[KBI] Datos cargados de Supabase:', {
           sucursales: resSuc.length,
@@ -195,6 +231,7 @@ export async function loadAllData() {
       console.error('[KBI] Error cargando de Supabase, intentando local:', err);
     }
   }
+
 
   if (supabaseSuccess) {
     updateCloudUI('ok');

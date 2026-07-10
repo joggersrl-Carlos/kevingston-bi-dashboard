@@ -9,6 +9,8 @@ $files = @(
   'js/views/vendedor.js',
   'js/views/producto.js',
   'js/views/resumen.js',
+  'js/views/insights.js',
+  'js/views/caja.js',
   'js/main.js'
 )
 

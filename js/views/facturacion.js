@@ -1,6 +1,7 @@
 import { emptyMsg, fm, fn, fd, groupSum, uniqueTickets, DOW_SHORT, MESES_NOMBRE } from '../utils.js';
-import { fComp, fMovp, SUCURSALES, getC } from '../state.js';
+import { fComp, fMovp, SUCURSALES, getC, DB, normalizeNro, getValidComps } from '../state.js';
 import { buildTable, mkTH, mkTD } from '../components/tables.js';
+
 
 export function renderMensualFact(tkts, movp) {
   var mesF={};
@@ -160,15 +161,33 @@ export function renderFact(){
   );
   if(hlIdx!==undefined){var trs=document.getElementById('tbl-suc').querySelectorAll('tbody tr');if(trs[hlIdx])trs[hlIdx].className='hl';}
   var DN=['dom','lun','mar','mié','jue','vie','sáb'],dM={};
-  tkts.forEach(function(r){var k=r.anio+'-'+r.mes+'-'+r.dia;if(!dM[k]){var fd2=r.fecha instanceof Date?r.fecha:pDate(r.fecha);dM[k]={anio:r.anio,mes:r.mes,dia:r.dia,dow:fd2?DN[fd2.getDay()]:'',imp:0,tkt:0};}dM[k].imp+=r.importe;dM[k].tkt++;});
+  // DEBUG: log primer registro para visibilidad de tipos de campo
+  tkts.forEach(function(r){
+    var k=r.anio+'-'+r.mes+'-'+r.dia;
+    if(!dM[k]) {
+      // FIX: r.fecha puede ser string ISO desde Supabase — usar r.dow pre-normalizado, o derivar de Date si existe
+      var dowIdx = (r.dow != null) ? parseInt(r.dow) : null;
+      if(dowIdx === null && r.fecha) {
+        var fd = (r.fecha instanceof Date) ? r.fecha : new Date(r.fecha);
+        if(!isNaN(fd.getTime())) dowIdx = fd.getDay();
+      }
+      dM[k]={anio:r.anio,mes:r.mes,dia:r.dia,dow:dowIdx!=null?DN[dowIdx]:'',imp:0,tkt:0};
+    }
+    dM[k].imp+=r.importe;
+    dM[k].tkt++;
+  });
   var uD={};movp.forEach(function(r){var k=r.anio+'-'+r.mes+'-'+r.dia;uD[k]=(uD[k]||0)+r.salida;});
-  var dK=Object.keys(dM).sort(function(a,b){var pa=a.split('-'),pb=b.split('-');return(+pa[0]-+pb[0])||(+pa[1]-+pb[1])||(+pa[2]-+pb[2]);});
-  
-  if(dK.length){
+  var dK=Object.keys(dM).sort();
+  if(dK.length && document.getElementById('chart-diaria')){
     document.getElementById('chart-diaria').style.display='block';
-    if(!window.chartDiaria) window.chartDiaria = window.echarts.init(document.getElementById('chart-diaria'));
-    var tc = document.body.classList.contains('light-mode') ? '#334155' : '#f0ede8';
-    var tcM = document.body.classList.contains('light-mode') ? '#64748b' : '#8a8680';
+    
+    var isDark = !document.body.classList.contains('light-mode');
+    if(!window.chartDiaria) {
+        window.chartDiaria = window.echarts.init(document.getElementById('chart-diaria'), isDark ? 'dark' : null);
+    }
+    
+    var tc = isDark ? '#f0ede8' : '#334155';
+    var tcM = isDark ? '#8a8680' : '#64748b';
     var cX=[], cF=[], cU=[];
     dK.forEach(function(k){
       var v=dM[k];
@@ -176,26 +195,30 @@ export function renderFact(){
       cF.push(Math.round(v.imp));
       cU.push(uD[k]||0);
     });
-    window.chartDiaria.setOption({
-      tooltip:{trigger:'axis',axisPointer:{type:'cross'},formatter:function(p){
-        var h='<b>'+p[0].axisValue+'</b><br/>';
-        p.forEach(function(s){
-          if(s.seriesName==='Facturación') h+=s.marker+' Facturación: <b>$ '+s.value.toLocaleString('es-AR')+'</b><br/>';
-          else h+=s.marker+' Unidades: <b>'+s.value.toLocaleString('es-AR')+'</b><br/>';
-        });return h;
-      }},
-      legend:{data:['Facturación','Unidades'],textStyle:{color:tc},bottom:0},
-      grid:{left:'3%',right:'4%',bottom:'15%',top:'12%',containLabel:true},
-      xAxis:[{type:'category',data:cX,axisLabel:{color:tcM}}],
-      yAxis:[
-        {type:'value',name:'$',nameTextStyle:{color:'#c9a96e'},axisLabel:{color:tcM,formatter:function(v){return'$ '+(v>=1000?(v/1000).toFixed(0)+'k':v);}},splitLine:{lineStyle:{color:'rgba(255,255,255,0.05)'}}},
-        {type:'value',name:'Unidades',nameTextStyle:{color:'#52c48a'},axisLabel:{color:tcM},splitLine:{show:false}}
-      ],
-      series:[
-        {name:'Facturación',type:'line',smooth:true,yAxisIndex:0,data:cF,itemStyle:{color:'#c9a96e'},areaStyle:{color:new window.echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(201,169,110,0.5)'},{offset:1,color:'rgba(201,169,110,0.0)'}])}},
-        {name:'Unidades',type:'line',smooth:true,yAxisIndex:1,data:cU,itemStyle:{color:'#52c48a'}}
-      ]
-    });
+    try {
+      window.chartDiaria.setOption({
+        tooltip:{trigger:'axis',axisPointer:{type:'cross'},formatter:function(p){
+          var h='<b>'+p[0].axisValue+'</b><br/>';
+          p.forEach(function(s){
+            if(s.seriesName==='Facturación') h+=s.marker+' Facturación: <b>$ '+s.value.toLocaleString('es-AR')+'</b><br/>';
+            else h+=s.marker+' Unidades: <b>'+s.value.toLocaleString('es-AR')+'</b><br/>';
+          });return h;
+        }},
+        legend:{data:['Facturación','Unidades'],textStyle:{color:tc},bottom:0},
+        grid:{left:'3%',right:'4%',bottom:'15%',top:'12%',containLabel:true},
+        xAxis:[{type:'category',data:cX,axisLabel:{color:tcM}}],
+        yAxis:[
+          {type:'value',name:'$',nameTextStyle:{color:'#c9a96e'},axisLabel:{color:tcM,formatter:function(v){return'$ '+(v>=1000?(v/1000).toFixed(0)+'k':v);}},splitLine:{lineStyle:{color:'rgba(255,255,255,0.05)'}}},
+          {type:'value',name:'Unidades',nameTextStyle:{color:'#52c48a'},axisLabel:{color:tcM},splitLine:{show:false}}
+        ],
+        series:[
+          {name:'Facturación',type:'line',smooth:true,yAxisIndex:0,data:cF,itemStyle:{color:'#c9a96e'},areaStyle:{color:new window.echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(201,169,110,0.5)'},{offset:1,color:'rgba(201,169,110,0.0)'}])}},
+          {name:'Unidades',type:'line',smooth:true,yAxisIndex:1,data:cU,itemStyle:{color:'#52c48a'}}
+        ]
+      });
+    } catch(err) {
+      console.error('[KBI] Error rendering chartDiaria:', err);
+    }
   } else {
     document.getElementById('chart-diaria').style.display='none';
   }
@@ -241,9 +264,12 @@ export function renderFact(){
   var años = Object.keys(yoyData).sort();
   if (años.length > 0 && yoyCard) {
     yoyCard.style.display = 'block';
-    if (!window.chartYOY) window.chartYOY = echarts.init(document.getElementById('chart-yoy'), document.body.classList.contains('light-mode') ? null : 'dark', {renderer: 'canvas'});
-    var tcY = document.body.classList.contains('light-mode') ? '#334155' : '#f8fafc';
-    var tcMY = document.body.classList.contains('light-mode') ? '#64748b' : '#94a3b8';
+    var isDark = !document.body.classList.contains('light-mode');
+    if (!window.chartYOY) {
+      window.chartYOY = window.echarts.init(document.getElementById('chart-yoy'), isDark ? 'dark' : null, {renderer: 'canvas'});
+    }
+    var tcY = isDark ? '#f8fafc' : '#334155';
+    var tcMY = isDark ? '#94a3b8' : '#64748b';
     var series = años.map(function(y, i) {
       return {
         name: y,
@@ -296,7 +322,8 @@ export function renderHorarioPico(tkts) {
     card.style.display = 'block';
     container.style.display = 'block';
     if(emptyDiv) emptyDiv.style.display = 'none';
-    if(!window.chartHora) window.chartHora = window.echarts.init(container);
+    var isDark = !document.body.classList.contains('light-mode');
+    if(!window.chartHora) window.chartHora = window.echarts.init(container, isDark ? 'dark' : null);
     
     var hKeys = Object.keys(hData).filter(h => hData[h].tkt > 0).map(Number);
     if (!hKeys.length) return; 
@@ -315,8 +342,8 @@ export function renderHorarioPico(tkts) {
        seriesDataImp.push(hData[i] ? hData[i].imp : 0);
     }
 
-    var tcM = document.body.classList.contains('light-mode') ? '#64748b' : '#8a8680';
-    var tc = document.body.classList.contains('light-mode') ? '#334155' : '#f0ede8';
+    var tcM = isDark ? '#8a8680' : '#64748b';
+    var tc = isDark ? '#f0ede8' : '#334155';
 
     window.chartHora.setOption({
       backgroundColor: 'transparent',

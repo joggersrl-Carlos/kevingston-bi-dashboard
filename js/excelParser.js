@@ -40,6 +40,7 @@ export function doParseMovp(rows,suc){
     var vRaw=getCol(r,'VENDEDOR');
     out.push({sucursal:suc,fecha:fecha,anio:fecha.getFullYear(),mes:fecha.getMonth()+1,dia:fecha.getDate(),dow:fecha.getDay(),
       cod_prod:getCol(r,'CODIGO_PRODUCTO'),nro_comp:getCol(r,'NUMERO_COMPROBANTE'),
+      nombre_prod:getCol(r,'DESCRIPCION_PRODUCTO')||getCol(r,'NOMBRE_PRODUCTO')||'',
       desc_prod:getCol(r,'DESCRIPCION_PRODUCTO'),salida:pNum(getCol(r,'CANTIDAD_SALIDA')),
       entrada:pNum(getCol(r,'CANTIDAD_ENTRADA')),importe:pMoney(getCol(r,'IMPORTE_VALORIZACION')),
       vend_raw:vRaw,vend_cod:vendCod(vRaw),vend_nombre:vendNombre(vRaw),
@@ -112,6 +113,11 @@ export function handleFiles(ev, renderLoadedFn, buildFiltersFn, doRenderFn){
   var files=Array.from(ev.target.files);if(!files.length)return;
   var suc=document.getElementById('sucSelect').value,t=document.getElementById('tipoSelect').value;if(!suc)return;
   var total=files.length,done=0,added=0,failedFiles=[];
+
+  // Fix #9: Deshabilitar botón de upload durante el proceso
+  var uploadBtn = document.querySelector('.upload-bar button');
+  if(uploadBtn){ uploadBtn.disabled=true; uploadBtn.innerHTML='⏳ Procesando...'; uploadBtn.style.opacity='0.7'; }
+
   files.forEach(function(file){
     var reader=new FileReader();
     reader.onload=function(e){
@@ -138,7 +144,6 @@ export function handleFiles(ev, renderLoadedFn, buildFiltersFn, doRenderFn){
         }
         if(headerIdx!==-1){
           var rows=window.XLSX.utils.sheet_to_json(ws,{defval:'',raw:true,range:headerIdx});
-          console.log('[KBI] Tipo:',t,'| Suc:',suc,'| Header fila:',headerIdx,'| Filas:',rows.length);
           var parsed=[];
           if(t==='comp') parsed=doParseComp(rows,suc);
           if(t==='movp') parsed=doParseMovp(rows,suc);
@@ -160,18 +165,19 @@ export function handleFiles(ev, renderLoadedFn, buildFiltersFn, doRenderFn){
             }
           });
         } else {
-          console.warn('[KBI] Header no encontrado para "'+t+'" — buscando:',keys.join(', '));
           failedFiles.push(file.name);
         }
       }catch(err){console.error(file.name,err);failedFiles.push(file.name);}
       done++;
       if(done===total){
+        // Restaurar botón
+        if(uploadBtn){ uploadBtn.disabled=false; uploadBtn.innerHTML='📂 Seleccionar archivo(s)'; uploadBtn.style.opacity='1'; }
         if(added>0){
           var TN={comp:'Comprobantes',movp:'Mov. Productos',stock:'Stock',caja:'Caja'};
           let newLoaded = [...LOADED, {id:'l'+Date.now(),suc:suc,type:t,typeName:TN[t],files:total,n:added}];
           setLoaded(newLoaded);
           renderLoadedFn();buildFiltersFn();doRenderFn();
-          saveAllData(); // Guardar en IndexedDB
+          saveAllData();
           document.getElementById('config-body').classList.remove('open');document.getElementById('config-arrow').classList.remove('open');
           showToast('✅ '+added+' registros cargados y guardados','success');
         }

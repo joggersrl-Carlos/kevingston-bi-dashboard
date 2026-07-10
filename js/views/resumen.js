@@ -56,11 +56,56 @@ export function renderResumen() {
     mkKpiL('Mejor Vendedor', topVend.substring(0,15)) + 
     mkKpiL('Rubro Estrella', topRubro.substring(0,20));
 
-  document.getElementById('tbl-resu-vend').innerHTML = buildTable(
-    [mkTH('Vendedor'), mkTH('Facturación',true,'i'), mkTH('Unidades',true,'u')],
-    vendArr.slice(0,5).map(function(r) { return [mkTD(r.nombre), mkTD(fm(r.imp),true,r.imp), mkTD(fn(r.uni),true,r.uni)]; }),
-    null, 'tbl-resu-vend'
-  );
+  // Top Vendedores — Render de Podio Visual
+  var top1 = vendArr[0] || { nombre: '—', imp: 0, uni: 0 };
+  var top2 = vendArr[1] || { nombre: '—', imp: 0, uni: 0 };
+  var top3 = vendArr[2] || { nombre: '—', imp: 0, uni: 0 };
+
+  var podiumHtml = `
+    <div class="podium-wrapper">
+      <!-- 2do puesto (Plata) -->
+      <div class="podium-column podium-silver" style="opacity: ${top2.imp > 0 ? 1 : 0.4}">
+        <div class="podium-info">
+          <div class="name" title="${top2.nombre}">${top2.nombre}</div>
+          <div class="val" style="color:#a1a1aa">${top2.imp > 0 ? fm(top2.imp) : '—'}</div>
+          <div class="sub">${top2.imp > 0 ? fn(top2.uni) + ' un.' : ''}</div>
+        </div>
+        <div class="podium-step">
+          2
+          <span class="podium-num-lbl">Puesto</span>
+        </div>
+      </div>
+      
+      <!-- 1er puesto (Oro) -->
+      <div class="podium-column podium-gold" style="opacity: ${top1.imp > 0 ? 1 : 0.4}">
+        <div class="podium-info">
+          <div class="name" title="${top1.nombre}">${top1.nombre}</div>
+          <div class="val" style="color:#e8c98a">${top1.imp > 0 ? fm(top1.imp) : '—'}</div>
+          <div class="sub">${top1.imp > 0 ? fn(top1.uni) + ' un.' : ''}</div>
+        </div>
+        <div class="podium-step">
+          ${top1.imp > 0 ? '<span class="podium-crown">👑</span>' : ''}
+          1
+          <span class="podium-num-lbl">Puesto</span>
+        </div>
+      </div>
+      
+      <!-- 3er puesto (Bronce) -->
+      <div class="podium-column podium-bronze" style="opacity: ${top3.imp > 0 ? 1 : 0.4}">
+        <div class="podium-info">
+          <div class="name" title="${top3.nombre}">${top3.nombre}</div>
+          <div class="val" style="color:#c97744">${top3.imp > 0 ? fm(top3.imp) : '—'}</div>
+          <div class="sub">${top3.imp > 0 ? fn(top3.uni) + ' un.' : ''}</div>
+        </div>
+        <div class="podium-step">
+          3
+          <span class="podium-num-lbl">Puesto</span>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('tbl-resu-vend').innerHTML = podiumHtml;
+
 
   document.getElementById('tbl-resu-rubro').innerHTML = buildTable(
     [mkTH('Rubro'), mkTH('Unidades',true,'u')],
@@ -75,8 +120,9 @@ export function renderResumen() {
   var charContainer = document.getElementById('chart-resu-tendencia');
   if(dK.length && charContainer) {
      charContainer.style.display='block';
-     if(!window.chartResu) window.chartResu = window.echarts.init(charContainer);
-     var tcM = document.body.classList.contains('light-mode') ? '#64748b' : '#8a8680';
+     var isDark = !document.body.classList.contains('light-mode');
+     if(!window.chartResu) window.chartResu = window.echarts.init(charContainer, isDark ? 'dark' : null);
+     var tcM = isDark ? '#8a8680' : '#64748b';
      var grad = new window.echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(56,189,248,0.5)'},{offset:1,color:'rgba(56,189,248,0.01)'}]);
      window.chartResu.setOption({
        tooltip: {trigger:'axis'},
