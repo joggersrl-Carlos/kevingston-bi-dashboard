@@ -1,5 +1,5 @@
-import { emptyMsg, fm, fn, fd, groupSum, uniqueTickets, DOW_SHORT, MESES_NOMBRE } from '../utils.js';
-import { fComp, fMovp, SUCURSALES, getC, DB, normalizeNro, getValidComps } from '../state.js';
+import { emptyMsg, fm, fn, fd, groupSum, uniqueTickets } from '../utils.js';
+import { fComp, fMovp, SUCURSALES, getC, DB, normalizeNro, getValidComps, DOW_SHORT, MESES_NOMBRE } from '../state.js';
 import { buildTable, mkTH, mkTD } from '../components/tables.js';
 
 

@@ -1,53 +1,142 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kevingston BI Dashboard — Análisis de Ventas</title>
-<meta name="description" content="Dashboard de Business Intelligence para Kevingston. Analisá facturación, vendedores, productos y stock en tiempo real.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
-<style>
-  .tcrd, .tcrd-full, .kpi-row, .dow-card, .tgrid2, .tgrid3, .pdf-avoid-break, .gender-block {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-</style>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kevingston BI Dashboard — Análisis de Ventas</title>
+  <meta name="description" content="Dashboard de Business Intelligence para Kevingston. Analisá facturación, vendedores, productos y stock en tiempo real.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tcrd, .tcrd-full, .kpi-row, .dow-card, .tgrid2, .tgrid3, .pdf-avoid-break, .gender-block {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+    /* Alineación de barra de nav derecha */
+    .brand-section { flex-shrink: 0; }
+    .nav-container-wrap { flex: 1; display: flex; justify-content: center; }
+    /* suc-text-input compatibilidad */
+    .suc-text-input {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      flex: 1;
+      font-family: inherit;
+      height: 32px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .suc-text-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+    .suc-empty { font-size: 12px; color: var(--muted); font-style: italic; }
+    /* Botones legacy */
+    #btnAddSucursal { background: var(--primary); color: #111; border: none; padding: 0 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; height: 32px; transition: all 0.2s; flex-shrink: 0; }
+    #btnAddSucursal:hover { background: var(--primary-hover); }
+    /* Icono SVG inline en tabs */
+    .tab-icon { width: 14px; height: 14px; opacity: 0.7; }
+    .ntab.active .tab-icon { opacity: 1; }
+    /* Alert dropdown fix */
+    #alertBell { position: relative; }
+    /* Page title oculto (fue reemplazado por nav) */
+    .page-title { display: none; }
+    /* Separador en filtros */
+    .filter-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+  </style>
 </head>
 <body>
 <div class="toast-container" id="toast-container"></div>
 
-<div class="topbar">
-  <div class="logo-box">K</div>
-  <div class="logo-text">KEVINGSTON</div>
-  <span class="page-title" id="pageTitle">Facturación Diaria</span>
-  <div class="top-actions" style="display:flex; align-items:center; gap:16px; margin-right:20px;">
-    <div id="cloudStatus" title="Verificando Nube..." style="position:relative; font-size:18px; cursor:help;">☁️
-      <div id="cloudDot" style="position:absolute; bottom:0; right:-2px; width:8px; height:8px; border-radius:50%; background:#e8c98a; border:2px solid var(--card); transition:background 0.3s; z-index:2;"></div>
+<!-- ===================== FILA 1: MARCA + NAV + UTILIDADES ===================== -->
+<header class="header-row-1">
+  <!-- Marca -->
+  <div class="brand-section">
+    <div class="logo-box">K</div>
+    <div class="logo-text-group">
+      <div class="logo-text">KEVINGSTON</div>
+      <div class="logo-sub">Business Intelligence</div>
     </div>
-    <div class="alert-bell" id="alertBell" style="position:relative; cursor:pointer; font-size:16px;" onclick="window.toggleAlerts&&window.toggleAlerts()">
-      🔔
-      <span id="alertBadge" style="position:absolute; top:-4px; right:-6px; background:var(--red); color:#fff; font-size:9px; font-weight:bold; padding:2px 4px; border-radius:10px; display:none;">0</span>
-      <div id="alertDropdown" style="display:none; position:absolute; top:30px; right:0; width:280px; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:10px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:100; backdrop-filter:blur(10px); cursor:default; text-shadow:none;" onclick="event.stopPropagation()">
-         <div style="font-size:12px; font-weight:700; color:var(--gold2); border-bottom:1px solid var(--border); padding-bottom:6px; margin-bottom:8px; font-family:'Outfit'">Centro de Alertas</div>
-         <div id="alertList" style="max-height:300px; overflow-y:auto; font-size:11px; display:flex; flex-direction:column; gap:6px;">
-            <div style="color:var(--muted); text-align:center; padding:10px 0;">No hay nuevas alertas.</div>
-         </div>
+  </div>
+
+  <!-- Pestañas de Navegación (centradas) -->
+  <div class="nav-container-wrap">
+    <nav class="nav-container" role="navigation" aria-label="Navegación principal">
+      <div class="ntab active" id="tab-resu" role="tab" aria-selected="true">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Resumen
+      </div>
+      <div class="ntab" id="tab-fact" role="tab">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Facturación
+      </div>
+      <div class="ntab" id="tab-vend" role="tab">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Vendedores
+      </div>
+      <div class="ntab" id="tab-prod" role="tab">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        Productos
+      </div>
+      <div class="ntab" id="tab-ins" role="tab">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Insights
+      </div>
+      <div class="ntab" id="tab-caja" role="tab">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Caja
+      </div>
+    </nav>
+  </div>
+
+  <!-- Utilidades: Nube, Alertas, Tema -->
+  <div class="utility-section">
+    <!-- Estado de Nube -->
+    <div class="cloud-status" id="cloudStatus" title="Verificando Nube...">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+      <div class="cloud-dot" id="cloudDot"></div>
+    </div>
+
+    <!-- Alertas -->
+    <div class="alert-bell" id="alertBell" onclick="window.toggleAlerts&&window.toggleAlerts()" title="Centro de Alertas">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <div class="alert-badge" id="alertBadge" style="display:none;">0</div>
+      <div class="alert-dropdown" id="alertDropdown" onclick="event.stopPropagation()">
+        <div style="font-size:12px; font-weight:700; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:10px; font-family:'Outfit'">Centro de Alertas</div>
+        <div id="alertList" style="max-height:300px; overflow-y:auto; font-size:11px; display:flex; flex-direction:column; gap:6px;">
+          <div style="color:var(--muted); text-align:center; padding:10px 0;">No hay nuevas alertas.</div>
+        </div>
       </div>
     </div>
-    <button id="themeToggle" style="background:var(--bg2); border:1px solid var(--border); color:var(--text); width:28px; height:28px; border-radius:50%; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); transition:all .2s;" title="Cambiar Tema" onclick="window.toggleTheme&&window.toggleTheme()">☀️</button>
+
+    <!-- Toggle Tema -->
+    <button class="theme-toggle-btn" id="themeToggle" title="Cambiar Tema" onclick="window.toggleTheme&&window.toggleTheme()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
   </div>
-  <div class="filters">
+</header>
+
+<!-- ===================== FILA 2: FILTROS Y EXPORTACIÓN ===================== -->
+<div class="filters-bar">
+  <div class="filter-controls">
     <span class="fl">Desde</span>
-    <input type="date" id="fDesde" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;">
+    <input type="date" id="fDesde">
     <span class="fl">Hasta</span>
-    <input type="date" id="fHasta" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;">
-    <div class="quick-filters" style="display:flex;gap:4px;margin-left:2px;margin-right:12px;">
-       <button class="qf-btn" onclick="window.setQuickDate&&window.setQuickDate('HOY')">Hoy</button>
-       <button class="qf-btn" onclick="window.setQuickDate&&window.setQuickDate('7D')">7D</button>
-       <button class="qf-btn" onclick="window.setQuickDate&&window.setQuickDate('MTD')">Mes</button>
+    <input type="date" id="fHasta">
+
+    <div class="quick-filters">
+      <button class="qf-btn" onclick="window.setQuickDate&&window.setQuickDate('HOY')">Hoy</button>
+      <button class="qf-btn" onclick="window.setQuickDate&&window.setQuickDate('7D')">7D</button>
+      <button class="qf-btn" onclick="window.setQuickDate&&window.setQuickDate('MTD')">Mes</button>
     </div>
-    <span class="fl" style="margin-left:6px;padding-left:10px;border-left:1px solid var(--border);">Año</span>
+
+    <div class="filter-sep"></div>
+
+    <span class="fl">Año</span>
     <select id="fAnio"><option value="0">Todos</option></select>
+
     <span class="fl">Mes</span>
     <select id="fMes">
       <option value="0">Todos</option>
@@ -56,29 +145,35 @@
       <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
       <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
     </select>
+
     <span class="fl">Sucursal</span>
     <select id="fCaja"><option value="">Todas</option></select>
-    <div class="export-group" style="display:flex;gap:4px;margin-left:8px;">
-      <button id="btnExportResu" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border:none;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(59,130,246,0.3);font-family:'Outfit';transition:0.2s" title="Exportar Resumen y KPIs">📊 Resumen</button>
-      <button id="btnExportCharts" style="background:linear-gradient(135deg,#c9a96e,#a68a52);color:#fff;border:none;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(201,169,110,0.3);font-family:'Outfit';transition:0.2s" title="Exportar Gráficos de esta página">📈 Gráficos</button>
-      <button id="btnExportTables" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(16,185,129,0.3);font-family:'Outfit';transition:0.2s" title="Exportar Tablas de datos">📋 Tablas</button>
-    </div>
+  </div>
+
+  <!-- Botones de Exportación -->
+  <div class="export-group">
+    <button id="btnExportResu" class="btn-export blue" title="Exportar Resumen y KPIs">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Resumen
+    </button>
+    <button id="btnExportCharts" class="btn-export gold" title="Exportar Gráficos">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Gráficos
+    </button>
+    <button id="btnExportTables" class="btn-export green" title="Exportar Tablas">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Tablas
+    </button>
   </div>
 </div>
 
-<div class="nav">
-  <div class="ntab active" id="tab-resu">Resumen General</div>
-  <div class="ntab" id="tab-fact">Facturación Diaria</div>
-  <div class="ntab" id="tab-vend">Análisis por Vendedor</div>
-  <div class="ntab" id="tab-prod">Reporte de Producto</div>
-  <div class="ntab" id="tab-ins">💡 Insights</div>
-  <div class="ntab" id="tab-caja">💰 Control de Caja</div>
-</div>
-
+<!-- ===================== CONFIGURAR SUCURSALES ===================== -->
 <div class="config-bar">
   <div class="config-header" onclick="toggleConfig()">
-    <div class="config-header-left">⚙️ Paso 1 — Configurar Sucursales
-      <span id="suc-count" style="color:var(--muted);font-weight:400;font-size:10px">0 cargadas</span>
+    <div class="config-header-left">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Paso 1 — Configurar Sucursales
+      <span id="suc-count" style="color:var(--muted);font-weight:400;font-size:10px;text-transform:none;letter-spacing:0">0 cargadas</span>
     </div>
     <span class="config-arrow" id="config-arrow">▼</span>
   </div>
@@ -87,23 +182,30 @@
       <input type="text" id="sucNameInput" class="suc-text-input"
         placeholder="Nombre de la sucursal (ej: Castelar)" maxlength="60"
         onkeydown="if(event.key==='Enter')addSucursal()">
-      <button id="btnAddSucursal"
-        style="background:#c9a96e;color:#111111;border:none;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;">
-        + Añadir Sucursal
-      </button>
+      <button id="btnAddSucursal" onclick="addSucursal()">+ Añadir Sucursal</button>
     </div>
     <div class="suc-chips" id="sucChips">
       <span class="suc-empty">Todavía no hay sucursales cargadas</span>
     </div>
-    <div style="margin-top:15px;text-align:right;display:flex;justify-content:space-between;align-items:center;gap:8px;">
-      <span style="font-size:10px;color:var(--muted)">☁️ Sincronización automática a la nube activada</span>
-      <button onclick="clearLocalData()" style="background:transparent;border:1px solid #e05252;color:#e05252;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;" title="Borra todos los archivos Excel guardados">🗑️ Borrar Datos Locales</button>
+    <div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+      <span style="font-size:10px; color:var(--muted); display:flex; align-items:center; gap:6px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+        Sincronización automática a la nube activada
+      </span>
+      <button onclick="clearLocalData()" style="background:transparent; border:1px solid var(--red); color:var(--red); padding:4px 12px; border-radius:6px; font-size:11px; cursor:pointer; display:flex; align-items:center; gap:6px; font-weight:600; transition: 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='transparent'" title="Borra todos los archivos Excel guardados">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Borrar Datos
+      </button>
     </div>
   </div>
 </div>
 
+<!-- ===================== CARGAR ARCHIVOS EXCEL ===================== -->
 <div class="upload-bar">
-  <div style="font-size:11px;font-weight:700;color:var(--gold2);margin-bottom:10px">📂 Paso 2 — Cargar Archivos Excel</div>
+  <div class="upload-title">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;margin-right:6px;vertical-align:-1px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+    Paso 2 — Cargar Archivos Excel
+  </div>
   <div class="upload-row">
     <div class="upload-field">
       <div class="upload-label">Sucursal</div>
@@ -112,84 +214,122 @@
     <div class="upload-field">
       <div class="upload-label">Tipo de archivo</div>
       <select id="tipoSelect" class="upload-select">
-        <option value="comp">🧾 Totales por Comprobante</option>
-        <option value="movp">🔄 Movimientos de Productos</option>
-        <option value="stock">📦 Unidades Vendidas y Stock</option>
-        <option value="caja">💰 Mov. Caja Consolidados</option>
+        <option value="comp">Totales por Comprobante</option>
+        <option value="movp">Movimientos de Productos</option>
+        <option value="stock">Unidades Vendidas y Stock</option>
+        <option value="caja">Mov. Caja Consolidados</option>
       </select>
     </div>
-    <button onclick="triggerUpload()"
-      style="background:#c9a96e;color:#111111;border:none;padding:7px 18px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;height:34px;white-space:nowrap;flex-shrink:0;">
-      📂 Seleccionar archivo(s)
+    <button class="btn-upload" onclick="triggerUpload()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Seleccionar archivo(s)
     </button>
   </div>
-  <div style="font-size:10px;color:var(--muted)">Podés cargar múltiples archivos del mismo tipo a la vez.</div>
+  <div style="font-size:10px; color:var(--muted)">Podés cargar múltiples archivos del mismo tipo a la vez.</div>
   <div class="loaded-list" id="loadedList"></div>
 </div>
 <input type="file" id="fi" accept=".xlsx,.xls,.csv" multiple style="display:none" onchange="handleFiles(event)">
 
+<!-- ===================== PÁGINA: RESUMEN GENERAL ===================== -->
 <div class="page active" id="page-resu">
   <div class="kpi-row" id="kpi-resu"></div>
   <div class="tgrid2">
-    <div class="tcrd"><div class="thdbar">🏆 Podio de Vendedores</div><div id="tbl-resu-vend"></div></div>
-    <div class="tcrd"><div class="thdbar">Top 5 Rubros del Mes</div><div class="tscroll" id="tbl-resu-rubro"></div></div>
+    <div class="tcrd">
+      <div class="thdbar">
+        <span class="thdbar-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;margin-right:6px;vertical-align:-2px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Podio de Vendedores
+        </span>
+      </div>
+      <div id="tbl-resu-vend"></div>
+    </div>
+    <div class="tcrd">
+      <div class="thdbar">
+        <span class="thdbar-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;margin-right:6px;vertical-align:-2px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Top 5 Rubros del Mes
+        </span>
+      </div>
+      <div class="tscroll" id="tbl-resu-rubro"></div>
+    </div>
   </div>
-  <div class="tcrd-full" style="margin-top:14px;"><div class="thdbar">Tendencia de Ventas (Últimos 7 días)</div>
+  <div class="tcrd-full" style="margin-top:0;">
+    <div class="thdbar">
+      <span class="thdbar-title">Tendencia de Ventas (Últimos 7 días)</span>
+    </div>
     <div id="chart-resu-tendencia" style="width:100%;height:300px;display:none;"></div>
   </div>
 </div>
 
+<!-- ===================== PÁGINA: FACTURACIÓN DIARIA ===================== -->
 <div class="page" id="page-fact">
   <div class="kpi-row" id="kpi-fact"></div>
   <div class="tcrd-full" id="yoy-card" style="display:none;padding-bottom:10px;">
-    <div class="thdbar" style="margin-bottom:5px;">Comparativa Interanual <span style="font-weight:normal;color:var(--muted);font-size:11px">(Unidades por mes)</span></div>
+    <div class="thdbar">
+      Comparativa Interanual
+      <span style="font-weight:normal;color:var(--muted);font-size:11px">(Unidades por mes)</span>
+    </div>
     <div id="chart-yoy" style="width:100%;height:300px;"></div>
   </div>
-  <div class="tcrd-full" id="hora-card" style="display:none;padding-bottom:10px;margin-top:14px;">
-    <div class="thdbar" style="margin-bottom:5px;">Ventas por Horario Pico ⏰<span style="font-weight:normal;color:var(--muted);font-size:11px"> (Facturación y Tickets)</span></div>
+  <div class="tcrd-full" id="hora-card" style="display:none;padding-bottom:10px;margin-top:16px;">
+    <div class="thdbar">
+      Ventas por Horario Pico
+      <span style="font-weight:normal;color:var(--muted);font-size:11px">(Facturación y Tickets)</span>
+    </div>
     <div id="chart-hora" style="width:100%;height:300px;"></div>
     <div id="chart-hora-empty" style="display:none;width:100%;height:140px;text-align:center;padding-top:60px;color:var(--muted);font-size:12px;opacity:0.8;">
-      📊 Todavía no hay horas registradas en memoria.<br/><br/>
-      <span style="color:var(--blue);cursor:pointer;" onclick="document.getElementById('config-btn').click()">👉 Vuelve a subir tu Excel de Comprobantes</span> para desbloquear este gráfico histórico.
+      Sin datos de horarios registrados. Subí tu Excel de Comprobantes para desbloquear este gráfico.
     </div>
   </div>
   <div class="tgrid3">
-    <div class="tcrd"><div class="thdbar"><span class="thdbar-title">Venta por Sucursal</span><button class="csv-btn" onclick="exportCSV('tbl-suc','venta_sucursal')">⬇ CSV</button></div><div class="tscroll" id="tbl-suc"></div></div>
-    <div class="tcrd"><div class="thdbar"><span class="thdbar-title">Facturación Diaria</span><button class="csv-btn" onclick="exportCSV('tbl-diaria','facturacion_diaria')">⬇ CSV</button></div>
+    <div class="tcrd">
+      <div class="thdbar"><span class="thdbar-title">Venta por Sucursal</span><button class="csv-btn" onclick="exportCSV('tbl-suc','venta_sucursal')">⬇ CSV</button></div>
+      <div class="tscroll" id="tbl-suc"></div>
+    </div>
+    <div class="tcrd">
+      <div class="thdbar"><span class="thdbar-title">Facturación Diaria</span><button class="csv-btn" onclick="exportCSV('tbl-diaria','facturacion_diaria')">⬇ CSV</button></div>
       <div id="chart-diaria" style="width:100%;height:300px;display:none;"></div>
       <div class="tscroll" id="tbl-diaria"></div>
     </div>
-    <div class="dow-card"><div class="thdbar">Ranking por Día de Semana</div><div class="dow-body" id="dow-ranking"></div></div>
+    <div class="dow-card">
+      <div class="thdbar"><span class="thdbar-title">Ranking por Día de Semana</span></div>
+      <div class="dow-body" id="dow-ranking"></div>
+    </div>
   </div>
-  <!-- Ranking Mensual -->
   <div class="tgrid2">
     <div class="tcrd"><div class="thdbar">Ranking Mensual — Facturación ($)</div><div class="tscroll" id="tbl-mes-fact"></div></div>
     <div class="tcrd"><div class="thdbar">Ranking Mensual — Unidades</div><div class="tscroll" id="tbl-mes-uni"></div></div>
   </div>
 </div>
 
+<!-- ===================== PÁGINA: ANÁLISIS POR VENDEDOR ===================== -->
 <div class="page" id="page-vend">
   <div class="kpi-row" id="kpi-vend"></div>
-  <div class="tcrd-full" style="padding-bottom:12px;margin-bottom:14px;">
+  <div class="tcrd-full" style="padding-bottom:12px;margin-bottom:16px;">
     <div class="thdbar">Ranking de Vendedores — Facturación</div>
     <div id="chart-vend" style="width:100%;height:320px;display:none;"></div>
   </div>
-  <div class="tcrd-full"><div class="thdbar"><span class="thdbar-title">Venta por Vendedor</span><button class="csv-btn" onclick="exportCSV('tbl-vendedor','venta_vendedor')">⬇ CSV</button></div><div id="tbl-vendedor"></div></div>
+  <div class="tcrd-full">
+    <div class="thdbar"><span class="thdbar-title">Venta por Vendedor</span><button class="csv-btn" onclick="exportCSV('tbl-vendedor','venta_vendedor')">⬇ CSV</button></div>
+    <div id="tbl-vendedor"></div>
+  </div>
 </div>
 
+<!-- ===================== PÁGINA: REPORTE DE PRODUCTO ===================== -->
 <div class="page" id="page-prod">
-  <div class="pdf-avoid-break" style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 14px 4px;flex-wrap:wrap;gap:10px">
+  <div class="pdf-avoid-break" style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 24px 4px;flex-wrap:wrap;gap:10px">
     <div class="gender-block" style="padding:0;gap:6px" id="gender-block"></div>
-    <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; width:100%; margin: 10px 0;">
-      <div id="chart-gender" style="flex:1; min-width:200px; height:240px; display:none;"></div>
-      <div id="chart-gender-pct" style="flex:1; min-width:200px; height:240px; display:none;"></div>
-      <div id="chart-gender-pesos" style="flex:1; min-width:200px; height:240px; display:none;"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%;margin:10px 0;">
+      <div id="chart-gender" style="flex:1;min-width:200px;height:240px;display:none;"></div>
+      <div id="chart-gender-pct" style="flex:1;min-width:200px;height:240px;display:none;"></div>
+      <div id="chart-gender-pesos" style="flex:1;min-width:200px;height:240px;display:none;"></div>
     </div>
     <div class="prod-kpi-strip" style="padding:0" id="prod-kpi-strip"></div>
   </div>
   <div class="prod-main-grid">
-    <div class="tcrd"><div class="thdbar">Venta por Rubro</div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <div class="tcrd">
+      <div class="thdbar">Venta por Rubro</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <div id="chart-rubro" style="flex:1;min-width:200px;height:260px;display:none;"></div>
         <div id="chart-rubro-pesos" style="flex:1;min-width:200px;height:260px;display:none;"></div>
       </div>
@@ -199,14 +339,14 @@
     <div class="tcrd">
       <div class="thdbar">Venta por Producto (Unidades)</div>
       <div class="prod-search-wrap">
-        <input type="text" id="prodSearch" class="prod-search" placeholder="🔍 Buscar producto o código..." oninput="filterProductos()">
+        <input type="text" id="prodSearch" class="prod-search" placeholder="Buscar producto o código..." oninput="filterProductos()">
       </div>
       <div class="tscroll" id="tbl-producto"></div>
     </div>
     <div class="tcrd">
       <div class="thdbar">Venta por Producto ($)</div>
       <div class="prod-search-wrap">
-        <input type="text" id="prodSearchPesos" class="prod-search" placeholder="🔍 Buscar producto o código..." oninput="filterProductosPesos()">
+        <input type="text" id="prodSearchPesos" class="prod-search" placeholder="Buscar producto o código..." oninput="filterProductosPesos()">
       </div>
       <div class="tscroll" id="tbl-producto-pesos"></div>
     </div>
@@ -220,7 +360,7 @@
   <div class="annual-wrap"><div class="thdbar">Venta de Unidades Anual</div><div class="annual-scroll" id="tbl-annual"></div></div>
 </div>
 
-<!-- ========== PÁGINA INSIGHTS EJECUTIVOS ========== -->
+<!-- ===================== PÁGINA: INSIGHTS EJECUTIVOS ===================== -->
 <div class="page" id="page-ins">
   <div class="kpi-row" id="kpi-ins"></div>
   <div class="tgrid2" style="margin-top:0;">
@@ -234,12 +374,15 @@
     </div>
   </div>
   <div class="tcrd-full" style="margin-top:0;">
-    <div class="thdbar">💡 Análisis Ejecutivo Automático</div>
+    <div class="thdbar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;margin-right:6px;vertical-align:-2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Análisis Ejecutivo Automático
+    </div>
     <div id="ins-text" style="padding:16px;"></div>
   </div>
 </div>
 
-<!-- ========== PÁGINA CONTROL DE CAJA ========== -->
+<!-- ===================== PÁGINA: CONTROL DE CAJA ===================== -->
 <div class="page" id="page-caja">
   <div class="kpi-row" id="kpi-caja"></div>
   <div class="tgrid2" style="margin-top:0;">
@@ -263,5 +406,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script type="module" src="js/main.js?v=20260710"></script>
-</body></html>
+<script type="module" src="js/main.js?v=20260710b"></script>
+</body>
+</html>

@@ -571,7 +571,13 @@ if (isLightMode) document.body.classList.add('light-mode');
 
 function updateThemeIcon() {
   const btn = document.getElementById('themeToggle');
-  if (btn) btn.textContent = isLightMode ? '🌙' : '☀️';
+  if (btn) {
+    btn.title = isLightMode ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro';
+    // If the button only has text (legacy), replace with sun/moon icon text
+    if (!btn.querySelector('svg')) {
+      btn.textContent = isLightMode ? '🌙' : '☀️';
+    }
+  }
 }
 updateThemeIcon();
 
