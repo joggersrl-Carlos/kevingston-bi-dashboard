@@ -31,7 +31,18 @@ export function gel(id){return document.getElementById(id);}
 export function fm(n){return '$\u00a0'+Math.round(n).toLocaleString('es-AR');}
 export function fn(n){return Math.round(n).toLocaleString('es-AR');}
 export function fd(n){return parseFloat(n).toFixed(2);}
-export function emptyMsg(m){return'<div class="empty">'+m+'</div>';}
+export function emptyMsg(m, sub) {
+  return `<div class="empty">
+    <div class="empty-icon">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </div>
+    <div class="empty-title">${m}</div>
+    ${sub ? `<div class="empty-desc">${sub}</div>` : ''}
+  </div>`;
+}
+
 export function vendCod(v){if(!v)return'';var s=String(v).trim();var m=s.match(/^0*(\d+)[-–\s]/);if(m)return m[1];m=s.match(/^0*(\d+)$/);if(m)return m[1];return s;}
 export function vendNombre(v){if(!v)return'';var s=String(v).trim();var m=s.match(/^\d+[-–]\s*(.+)$/);if(m)return m[1].trim();return s;}
 export function getCol(row,name){

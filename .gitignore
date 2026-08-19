@@ -1,1 +1,13 @@
 .vercel
+*.png
+*.webp
+*.jpg
+*.jpeg
+.system_generated/
+.tempmediaStorage/
+backups/
+browser/
+task.md*
+implementation_plan.md*
+walkthrough.md*
+data/

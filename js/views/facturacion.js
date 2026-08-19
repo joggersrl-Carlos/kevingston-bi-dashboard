@@ -168,8 +168,8 @@ export function renderFact(){
       // FIX: r.fecha puede ser string ISO desde Supabase — usar r.dow pre-normalizado, o derivar de Date si existe
       var dowIdx = (r.dow != null) ? parseInt(r.dow) : null;
       if(dowIdx === null && r.fecha) {
-        var fd = (r.fecha instanceof Date) ? r.fecha : new Date(r.fecha);
-        if(!isNaN(fd.getTime())) dowIdx = fd.getDay();
+        var fdObj = (r.fecha instanceof Date) ? r.fecha : new Date(r.fecha);
+        if(!isNaN(fdObj.getTime())) dowIdx = fdObj.getDay();
       }
       dM[k]={anio:r.anio,mes:r.mes,dia:r.dia,dow:dowIdx!=null?DN[dowIdx]:'',imp:0,tkt:0};
     }
@@ -262,6 +262,7 @@ export function renderFact(){
   });
   var yoyCard = document.getElementById('yoy-card');
   var años = Object.keys(yoyData).sort();
+  var cSelYoy = getC();
   if (años.length > 0 && yoyCard) {
     yoyCard.style.display = 'block';
     var isDark = !document.body.classList.contains('light-mode');

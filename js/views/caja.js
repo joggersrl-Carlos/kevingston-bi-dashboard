@@ -4,7 +4,8 @@
  */
 
 import { DB, getA, getM, getC, getDesde, getHasta } from '../state.js';
-import { emptyMsg, fm, fn, fd, buildTable, mkTH, mkTD } from '../components/tables.js';
+import { emptyMsg, fm, fn, fd } from '../utils.js';
+import { buildTable, mkTH, mkTD } from '../components/tables.js';
 
 function checkRangeCaja(r, a, m, c, d, h) {
   var rAnio = parseInt(r.anio) || 0;
@@ -54,13 +55,14 @@ export function renderCaja() {
     tEfectivo += (r.efectivo || 0);
   });
   var tNeto = tVentas - tGastos;
+  var isDark = !document.body.classList.contains('light-mode');
 
   const mkK = (l, v, cls) => `<div class="kpi"><div class="kpi-label">${l}</div><div class="kpi-val ${cls||''}">${v}</div></div>`;
   
   kpiEl.innerHTML = 
     mkK('Ventas Totales (Caja)', fm(tVentas), 'gold') +
-    mkK('Gastos Registrados', fm(tGastos), 'gold') +
-    mkK('Flujo Neto (Caja)', fm(tNeto), tNeto >= 0 ? 'gold' : 'gold') +
+    mkK('Gastos Registrados', fm(tGastos), 'red') +
+    mkK('Flujo Neto (Caja)', fm(tNeto), tNeto >= 0 ? 'gold' : 'red') +
     mkK('Cobrado en Efectivo', fm(tEfectivo)) +
     mkK('Cobrado en Tarjetas', fm(tTarjetas)) +
     mkK('% Tarjetas s/Venta', tVentas > 0 ? fd((tTarjetas / tVentas) * 100) + '%' : '0.00%');
@@ -73,7 +75,6 @@ export function renderCaja() {
   // --- 2. GRÁFICO COMPARATIVO VENTAS VS GASTOS ---
   if (chartContainerComp && window.echarts) {
     chartContainerComp.style.display = 'block';
-    var isDark = !document.body.classList.contains('light-mode');
     if (!window.chartCajaComp) {
       window.chartCajaComp = window.echarts.init(chartContainerComp, isDark ? 'dark' : null);
     }
@@ -106,7 +107,6 @@ export function renderCaja() {
   // --- 3. GRÁFICO MIX COBRANZA (Efectivo vs Tarjeta) ---
   if (chartContainerMix && window.echarts) {
     chartContainerMix.style.display = 'block';
-    var isDark = !document.body.classList.contains('light-mode');
     if (!window.chartCajaMix) {
       window.chartCajaMix = window.echarts.init(chartContainerMix, isDark ? 'dark' : null);
     }

@@ -281,13 +281,23 @@ export async function loadAllData() {
   }
 }
 
+let _clearPending = false;
+let _clearTimer = null;
 export function clearLocalData() {
   if (!window.localforage) return;
-  if (confirm('Estas seguro de borrar TODOS los datos almacenados localmente de esta computadora?')) {
-    window.localforage.clear().then(function() {
-      alert('Datos borrados exitosamente. La pagina se recargara.');
-      location.reload();
-    });
+  if (!_clearPending) {
+    _clearPending = true;
+    if (window.showToast) window.showToast('⚠️ Hacé clic de nuevo en "Borrar Datos" para confirmar. Se eliminarán TODOS los datos locales.', 'error', 4000);
+    _clearTimer = setTimeout(function() { _clearPending = false; }, 4500);
+    return;
   }
+  clearTimeout(_clearTimer);
+  _clearPending = false;
+  window.localforage.clear().then(function() {
+    if (window.showToast) window.showToast('✅ Datos borrados. Recargando...', 'success', 2000);
+    setTimeout(function() { location.reload(); }, 1800);
+  }).catch(function(e) {
+    if (window.showToast) window.showToast('❌ Error al borrar datos: ' + e.message, 'error', 4000);
+  });
 }
 

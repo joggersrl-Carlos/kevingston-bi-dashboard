@@ -436,21 +436,25 @@ function exportPageSection(type) {
   window.html2pdf().set(opt).from(clone).save();
 }
 
+let _resizeTimer = null;
 window.addEventListener('resize', function() {
-  if (window.chartDiaria)      window.chartDiaria.resize();
-  if (window.chartGender)      window.chartGender.resize();
-  if (window.chartGenderPct)   window.chartGenderPct.resize();
-  if (window.chartGenderPesos) window.chartGenderPesos.resize();
-  if (window.chartRubro)       window.chartRubro.resize();
-  if (window.chartRubroPesos)  window.chartRubroPesos.resize();
-  if (window.chartYOY)         window.chartYOY.resize();
-  if (window.chartResu)        window.chartResu.resize();
-  if (window.chartHora)        window.chartHora.resize();
-  if (window.chartVend)        window.chartVend.resize();
-  if (window.chartInsDist)     window.chartInsDist.resize();
-  if (window.chartInsAvg)      window.chartInsAvg.resize();
-  if (window.chartCajaComp)    window.chartCajaComp.resize();
-  if (window.chartCajaMix)     window.chartCajaMix.resize();
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(function() {
+    if (window.chartDiaria)      window.chartDiaria.resize();
+    if (window.chartGender)      window.chartGender.resize();
+    if (window.chartGenderPct)   window.chartGenderPct.resize();
+    if (window.chartGenderPesos) window.chartGenderPesos.resize();
+    if (window.chartRubro)       window.chartRubro.resize();
+    if (window.chartRubroPesos)  window.chartRubroPesos.resize();
+    if (window.chartYOY)         window.chartYOY.resize();
+    if (window.chartResu)        window.chartResu.resize();
+    if (window.chartHora)        window.chartHora.resize();
+    if (window.chartVend)        window.chartVend.resize();
+    if (window.chartInsDist)     window.chartInsDist.resize();
+    if (window.chartInsAvg)      window.chartInsAvg.resize();
+    if (window.chartCajaComp)    window.chartCajaComp.resize();
+    if (window.chartCajaMix)     window.chartCajaMix.resize();
+  }, 150);
 });
 
 showToast('☁️ Sincronizando datos automáticamente...', 'info', 3000);

@@ -101,9 +101,10 @@ export function renderProd(){
     document.getElementById('chart-gender-pct').style.display='block';
     document.getElementById('chart-gender-pesos').style.display='block';
     
-    if(!window.chartGender) window.chartGender=window.echarts.init(document.getElementById('chart-gender'));
-    if(!window.chartGenderPct) window.chartGenderPct=window.echarts.init(document.getElementById('chart-gender-pct'));
-    if(!window.chartGenderPesos) window.chartGenderPesos=window.echarts.init(document.getElementById('chart-gender-pesos'));
+    var isDarkGen = !document.body.classList.contains('light-mode');
+    if(!window.chartGender) window.chartGender=window.echarts.init(document.getElementById('chart-gender'), isDarkGen ? 'dark' : null);
+    if(!window.chartGenderPct) window.chartGenderPct=window.echarts.init(document.getElementById('chart-gender-pct'), isDarkGen ? 'dark' : null);
+    if(!window.chartGenderPesos) window.chartGenderPesos=window.echarts.init(document.getElementById('chart-gender-pesos'), isDarkGen ? 'dark' : null);
     
     var tcGen = document.body.classList.contains('light-mode') ? '#334155' : '#f0ede8';
     
