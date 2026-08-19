@@ -1,0 +1,26 @@
+{
+  "name": "dashboard-kvn",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://joggersrl-Carlos@github.com/joggersrl-Carlos/kevingston-bi-dashboard.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/joggersrl-Carlos/kevingston-bi-dashboard/issues"
+  },
+  "homepage": "https://github.com/joggersrl-Carlos/kevingston-bi-dashboard#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
+    "chokidar": "^5.0.0",
+    "xlsx": "^0.18.5"
+  }
+}
