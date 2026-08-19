@@ -1,4 +1,4 @@
-import { SUCURSALES, setSucursales, LOADED, curPage, setCurPage, clearDB, DB, SEEN } from './state.js';
+import { SUCURSALES, setSucursales, LOADED, curPage, setCurPage, clearDB, DB, SEEN, fMovp, fStock, fComp } from './state.js';
 import { handleFiles } from './excelParser.js';
 import { renderFact } from './views/facturacion.js';
 import { renderProd, filterProductos, filterProductosPesos } from './views/producto.js';

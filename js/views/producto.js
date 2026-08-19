@@ -1,5 +1,5 @@
-import { emptyMsg, fn, fm, groupSum, exportCSV, PALETTE } from '../utils.js';
-import { fStock, fMovp, fMovpBySuc, ALL_PROD_ROWS, ALL_PROD_PESOS_ROWS, setAllProdRows, setAllProdPesosRows } from '../state.js';
+import { emptyMsg, fn, fm, groupSum, exportCSV } from '../utils.js';
+import { fStock, fMovp, fMovpBySuc, ALL_PROD_ROWS, ALL_PROD_PESOS_ROWS, setAllProdRows, setAllProdPesosRows, PALETTE } from '../state.js';
 import { buildTable, mkTH, mkTD } from '../components/tables.js';
 
 export function filterProductos(){
