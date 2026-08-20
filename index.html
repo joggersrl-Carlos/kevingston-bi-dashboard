@@ -7,44 +7,17 @@
   <meta name="description" content="Dashboard de Business Intelligence para Kevingston. Analisá facturación, vendedores, productos y stock en tiempo real.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20260710e">
   <style>
     .tcrd, .tcrd-full, .kpi-row, .dow-card, .tgrid2, .tgrid3, .pdf-avoid-break, .gender-block {
       page-break-inside: avoid !important;
       break-inside: avoid !important;
     }
-    /* Alineación de barra de nav derecha */
-    .brand-section { flex-shrink: 0; }
-    .nav-container-wrap { flex: 1; display: flex; justify-content: center; }
-    /* suc-text-input compatibilidad */
-    .suc-text-input {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 7px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      flex: 1;
-      font-family: inherit;
-      height: 32px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .suc-text-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
-    .suc-empty { font-size: 12px; color: var(--muted); font-style: italic; }
-    /* Botones legacy */
-    #btnAddSucursal { background: var(--primary); color: #111; border: none; padding: 0 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; height: 32px; transition: all 0.2s; flex-shrink: 0; }
-    #btnAddSucursal:hover { background: var(--primary-hover); }
-    /* Icono SVG inline en tabs */
+    /* Separador en filtros */
+    .filter-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
     .tab-icon { width: 14px; height: 14px; opacity: 0.7; }
     .ntab.active .tab-icon { opacity: 1; }
-    /* Alert dropdown fix */
-    #alertBell { position: relative; }
-    /* Page title oculto (fue reemplazado por nav) */
-    .page-title { display: none; }
-    /* Separador en filtros */
-    .filter-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
   </style>
 </head>
 <body>
@@ -406,6 +379,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script type="module" src="js/main.js?v=20260710d"></script>
+<script type="module" src="js/main.js?v=20260710e"></script>
 </body>
 </html>
